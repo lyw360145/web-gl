@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+        #container-gl {
+            /* width: 50px;
+            height: 250px; */
+            background: green;
+        }
+    </style>
+    <script src="./utils/programGl.js"></script>
+</head>
+
+<body>
+    <canvas id="container-gl"> </canvas>
+    <script>
+        const points = []
+
+        const canvas = document.getElementById('container-gl');
+ 
+        canvas.addEventListener('click', (e) => {
+            let x = e.clientX;
+            let y = e.clientY;
+            const rect = canvas.getBoundingClientRect();
+            x = x - rect.left;
+            y = y - rect.top;
+            const webglX = x / canvas.width * 2 - 1;
+            const webglY = -(y / canvas.height * 2 - 1);
+            points.push({
+                x: webglX,
+                y: webglY,
+                color:randomColor()
+            })
+            render();
+        })
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        const vertexCode = `
+        precision mediump float;
+        attribute vec2 position;
+        attribute vec2 position1;
+        void main(){
+           gl_Position = vec4(position,0,1.0);
+           gl_PointSize = 10.0;
+            
+        }
+        `;
+        const fragmentCode = `
+        precision mediump float;
+        uniform vec4 u_color;
+        void main(){
+            vec4 color = u_color / vec4(255, 255, 255, 1);
+            gl_FragColor = color;
+        }
+      `;
+        const vertexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+
+        // 创建着色器
+        const vertexShader = getShader(gl, vertexCode, gl.VERTEX_SHADER);
+        const fragmentShader = getShader(gl, fragmentCode, gl.FRAGMENT_SHADER);
+        // 创建着色器程序
+        const shaderProgram = getShaderProgram(gl, vertexShader, fragmentShader);
+        gl.useProgram(shaderProgram);
+        // 把坐标传给着色器
+        const u_position = gl.getAttribLocation(
+            shaderProgram,
+            'position'
+        );
+        const u_color =  gl.getUniformLocation(
+            shaderProgram,
+            'u_color'
+        );
+        console.log(u_color,'u_color')
+        const render = () => {
+            points.forEach((point) => {
+                const color = point.color;
+                gl.uniform4f(u_color, color.r, color.g, color.b, 1.0);
+                gl.vertexAttrib2f(u_position,point.x,point.y);
+             
+                gl.drawArrays(gl.POINTS, 0, 1);
+            });
+            
+        }
+        // gl.enableVertexAttribArray(positionAttributeLocation);
+        // gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+
+
+    </script>
+</body>
+
+</html>
