@@ -6,11 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
     <style>
-        #container-gl {
-            /* width: 500px;
-            height: 500px; */
-        }
+        /* #container-gl {
+            width: 800px;
+            height: 400px;
+        } */
     </style>
+    <script src="./utils/programGl.js" ></script>
 </head>
 
 <body>
@@ -22,7 +23,7 @@
         attribute vec3 position;
         void main(){
            gl_Position = vec4(position,1.0);
-           gl_PointSize = 24.0;
+           gl_PointSize = 10.0;
             
         }
         `;
@@ -47,21 +48,11 @@
             new Float32Array(vertices),
             gl.STATIC_DRAW
         );
-
-        const vertexShader = gl.createShader(gl.VERTEX_SHADER);
-        gl.shaderSource(vertexShader, vertexCode);
-        gl.compileShader(vertexShader);
-
-        const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-        gl.shaderSource(fragmentShader, fragmentCode);
-        gl.compileShader(fragmentShader);
+        // 创建着色器
+        const vertexShader = getShader(gl,vertexCode,gl.VERTEX_SHADER);
+        const fragmentShader = getShader(gl,fragmentCode,gl.FRAGMENT_SHADER);
         // 创建着色器程序
-        const shaderProgram = gl.createProgram();
-        gl.attachShader(shaderProgram, vertexShader);
-        gl.attachShader(shaderProgram, fragmentShader);
-        gl.linkProgram(shaderProgram);
-        gl.useProgram(shaderProgram);
-
+        const shaderProgram =getShaderProgram(gl,vertexShader,fragmentShader);
         // 把坐标传给着色器
         const positionAttributeLocation = gl.getAttribLocation(
             shaderProgram,
