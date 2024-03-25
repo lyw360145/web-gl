@@ -24,3 +24,19 @@ const randomColor = () => {
       a: random() * 1
     };
   }
+ // 按顺序
+  const  createBuffer = (gl, attribute, vertexAttribPointer) => {
+    let {size, type, normalize, stride, offset} = vertexAttribPointer;
+    gl.enableVertexAttribArray(attribute);
+    let buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.vertexAttribPointer(
+      attribute,
+      size,
+      type || gl.FLOAT,
+      normalize || false,
+      stride || 0,
+      offset || 0
+    );
+    return buffer;
+  }
