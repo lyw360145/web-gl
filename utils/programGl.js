@@ -18,9 +18,9 @@ const getShaderProgram = (gl, vertexShader, fragmentShader) => {
 const randomColor = () => {
     const random = Math.random;
     return {
-      r: random() * 255,
-      g: random() * 255,
-      b: random() * 255,
+      r: random(), 
+      g: random(), 
+      b: random(), 
       a: random() * 1
     };
   }

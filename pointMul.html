@@ -52,7 +52,7 @@
         precision mediump float;
         uniform vec4 u_color;
         void main(){
-            vec4 color = u_color / vec4(255, 255, 255, 1);
+            vec4 color = u_color ;
             gl_FragColor = color;
         }
       `;
@@ -74,7 +74,6 @@
             shaderProgram,
             'u_color'
         );
-        console.log(u_color,'u_color')
         const render = () => {
             points.forEach((point) => {
                 const color = point.color;
