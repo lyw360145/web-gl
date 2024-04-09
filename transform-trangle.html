@@ -81,10 +81,16 @@ https://cdn.jsdelivr.net/npm/dat.gui@0.7.9/build/dat.gui.min.js
                 }
 
             });
+            for(let i = 0; i < 3; i++){
+                newVertices[i*2] = newVertices[i*2] * params.scale;
+                newVertices[i*2+1] = newVertices[i*2+1] * params.scale;
+             }
+
+            console.log(newVertices,'newVertices')
             createBuffer(gl, position, {
                 size: 2
             });
-            console.log(newVertices,'newVertices')
+           
             gl.bufferData(
                 gl.ARRAY_BUFFER,
                 new Float32Array(newVertices),
@@ -106,14 +112,18 @@ https://cdn.jsdelivr.net/npm/dat.gui@0.7.9/build/dat.gui.min.js
         var params = {
             translateX: 0,
             translateY: 0,
+            scale:1
         };
         gui.add(params, 'translateX', -.8,.8 ).step(.001).onChange((e) => {
-
             params.translateX = e;
             render()
         });
         gui.add(params, 'translateY', -.8,.8).step(.001).onChange((e) => {
             params.translateY = e;
+            render()
+        });
+        gui.add(params, 'scale', 1,5).step(.001).onChange((e) => {
+            params.scale = e;
             render()
         });
         render()
