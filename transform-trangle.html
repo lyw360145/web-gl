@@ -10,7 +10,7 @@ https://cdn.jsdelivr.net/npm/dat.gui@0.7.9/build/dat.gui.min.js
 "></script>
     <style>
         /* #container-gl {
-            width: 800px;
+            width: 00px;
             height: 400px;
         } */
     </style>
@@ -25,11 +25,13 @@ https://cdn.jsdelivr.net/npm/dat.gui@0.7.9/build/dat.gui.min.js
         const gl = canvas.getContext('webgl');
         const vertexCode = `
         precision mediump float;
-        attribute vec3 position;
+        attribute vec2 position;
         attribute vec3 c_color;
+        uniform float u_angle;
         varying vec4 vertexColor;
         void main(){
-           gl_Position = vec4(position,1.0);
+            mat2 rotationMatrix = mat2(cos(u_angle), -sin(u_angle), sin(u_angle), cos(u_angle));
+           gl_Position = vec4(rotationMatrix * position ,0,1.0);
            vertexColor = vec4(c_color,1.0);
         }
         `;
@@ -52,7 +54,13 @@ https://cdn.jsdelivr.net/npm/dat.gui@0.7.9/build/dat.gui.min.js
             .5, 1, 1,
             0, .5, 0,
             0, 0, .5
-        ]
+        ];
+        // const rotate = [0, 0]
+        function printSineAndCosineForAnyAngle(angleInDegrees) {
+            var angleInRadians = angleInDegrees * Math.PI / 180;
+            return angleInRadians;
+
+        }
         // 创建着色器
         const vertexShader = getShader(gl, vertexCode, gl.VERTEX_SHADER);
         const fragmentShader = getShader(gl, fragmentCode, gl.FRAGMENT_SHADER);
@@ -71,8 +79,10 @@ https://cdn.jsdelivr.net/npm/dat.gui@0.7.9/build/dat.gui.min.js
             shaderProgram,
             'c_color'
         );
+        var angleUniformLocation = gl.getUniformLocation(shaderProgram, 'u_angle');
 
         var render = () => {
+            gl.clear(gl.COLOR_BUFFER_BIT);
             var newVertices = vertices.map((item, index) => {
                 if (index % 2 === 0) {
                     return item + params.translateX
@@ -81,16 +91,20 @@ https://cdn.jsdelivr.net/npm/dat.gui@0.7.9/build/dat.gui.min.js
                 }
 
             });
-            for(let i = 0; i < 3; i++){
-                newVertices[i*2] = newVertices[i*2] * params.scale;
-                newVertices[i*2+1] = newVertices[i*2+1] * params.scale;
-             }
+            for (let i = 0; i < 3; i++) {
+                newVertices[i * 2] = newVertices[i * 2] * params.scale;
+                newVertices[i * 2 + 1] = newVertices[i * 2 + 1] * params.scale;
+            }
+            gl.uniform1f(angleUniformLocation,  printSineAndCosineForAnyAngle(params.rotate));
+            // for (let i = 0; i < 3; i++) {
+            //     newVertices[i * 2] = rotate[1] * newVertices[i * 2] - rotate[0] * newVertices[i * 2 + 1];
+            //     newVertices[i * 2 + 1] = rotate[0] * newVertices[i * 2] + newVertices[i * 2 + 1] * rotate[1];
+            // }
 
-            console.log(newVertices,'newVertices')
             createBuffer(gl, position, {
                 size: 2
             });
-           
+
             gl.bufferData(
                 gl.ARRAY_BUFFER,
                 new Float32Array(newVertices),
@@ -112,18 +126,23 @@ https://cdn.jsdelivr.net/npm/dat.gui@0.7.9/build/dat.gui.min.js
         var params = {
             translateX: 0,
             translateY: 0,
-            scale:1
+            scale: 1,
+            rotate: 0
         };
-        gui.add(params, 'translateX', -.8,.8 ).step(.001).onChange((e) => {
+        gui.add(params, 'translateX', -.8, .8).step(.001).onChange((e) => {
             params.translateX = e;
             render()
         });
-        gui.add(params, 'translateY', -.8,.8).step(.001).onChange((e) => {
+        gui.add(params, 'translateY', -.8, .8).step(.001).onChange((e) => {
             params.translateY = e;
             render()
         });
-        gui.add(params, 'scale', 1,5).step(.001).onChange((e) => {
+        gui.add(params, 'scale', 1, 5).step(.001).onChange((e) => {
             params.scale = e;
+            render()
+        });
+        gui.add(params, 'rotate', 0, 360).step(.001).onChange((e) => {
+            params.rotate = e;
             render()
         });
         render()
