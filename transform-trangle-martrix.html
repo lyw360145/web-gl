@@ -85,10 +85,9 @@ https://cdn.jsdelivr.net/npm/dat.gui@0.7.9/build/dat.gui.min.js
             gl.clear(gl.COLOR_BUFFER_BIT);
             matrix[3] = params.translateX;
             matrix[7] = params.translateY;
+            // 矩阵模型
             const targetMatrix = matrixRowTransforCol(matrix)
-
             gl.uniformMatrix4fv(matrixLocation, false, targetMatrix);
-
 
             createBuffer(gl, position, {
                 size: 2
