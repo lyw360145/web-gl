@@ -81,12 +81,14 @@ https://cdn.jsdelivr.net/npm/dat.gui@0.7.9/build/dat.gui.min.js
         );
         // var angleUniformLocation = gl.getUniformLocation(shaderProgram, 'u_angle');
         const matrixLocation = gl.getUniformLocation(shaderProgram, "uMatrix");
+        var tepmMatrix = null;
         var render = () => {
             gl.clear(gl.COLOR_BUFFER_BIT);
-            matrix[3] = params.translateX;
-            matrix[7] = params.translateY;
+
+
             // 矩阵模型
-            const targetMatrix = matrixRowTransforCol(matrix)
+            const targetMatrix = matrixRowTransforCol(tepmMatrix, matrix)
+
             gl.uniformMatrix4fv(matrixLocation, false, targetMatrix);
 
             createBuffer(gl, position, {
@@ -117,23 +119,34 @@ https://cdn.jsdelivr.net/npm/dat.gui@0.7.9/build/dat.gui.min.js
             scale: 1,
             rotate: 0
         };
+        const setTranslateMatrix = (e) => {
+            tepmMatrix = new Float32Array(matrix);
+            tepmMatrix[3] = params.translateX;
+            tepmMatrix[7] = params.translateY;
+        }
         gui.add(params, 'translateX', -.8, .8).step(.001).onChange((e) => {
-            params.translateX = e;
+            setTranslateMatrix(e);
             render()
         });
         gui.add(params, 'translateY', -.8, .8).step(.001).onChange((e) => {
-            params.translateY = e;
+            setTranslateMatrix(e);
             render()
         });
-        // gui.add(params, 'scale', 1, 5).step(.001).onChange((e) => {
-        //     params.scale = e;
-        //     render()
-        // });
-        // gui.add(params, 'rotate', 0, 360).step(.001).onChange((e) => {
-        //     params.rotate = e;
-        //     render()
-        // });
-        // render()
+        gui.add(params, 'scale', 1, 5).step(.001).onChange((e) => {
+            tepmMatrix = new Float32Array(matrix);
+            tepmMatrix[0] = tepmMatrix[0] * params.scale;
+            tepmMatrix[5] = tepmMatrix[5] * params.scale;
+            render()
+        });
+        gui.add(params, 'rotate', 0, 360).step(.001).onChange((e) => {
+            tepmMatrix = new Float32Array(matrix);
+            tepmMatrix[0] = Math.cos(printSineAndCosineForAnyAngle(params.rotate));
+            tepmMatrix[1] = -Math.sin(printSineAndCosineForAnyAngle(params.rotate));
+            tepmMatrix[4] = Math.sin(printSineAndCosineForAnyAngle(params.rotate));
+            tepmMatrix[5] = Math.cos(printSineAndCosineForAnyAngle(params.rotate));
+            render()
+        });
+        render()
     </script>
 </body>
 
