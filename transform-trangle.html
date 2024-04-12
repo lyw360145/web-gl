@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>实现平移，放大，旋转（Z）</title>
     <script src="
 https://cdn.jsdelivr.net/npm/dat.gui@0.7.9/build/dat.gui.min.js
 "></script>
@@ -20,7 +20,6 @@ https://cdn.jsdelivr.net/npm/dat.gui@0.7.9/build/dat.gui.min.js
 <body>
     <canvas id="container-gl"> </canvas>
     <script>
-
         const canvas = document.getElementById('container-gl');
         const gl = canvas.getContext('webgl');
         const vertexCode = `
@@ -42,13 +41,10 @@ https://cdn.jsdelivr.net/npm/dat.gui@0.7.9/build/dat.gui.min.js
           gl_FragColor = vertexColor;
         }
       `;
-        var vertices = [
-            -0.2,
-            -0.2,
+        var vertices = [-0.2, -0.2,
             0.0,
             0.2,
-            0.2,
-            -0.2,
+            0.2, -0.2,
         ];
         const colors = [
             .5, 1, 1,
@@ -95,7 +91,7 @@ https://cdn.jsdelivr.net/npm/dat.gui@0.7.9/build/dat.gui.min.js
                 newVertices[i * 2] = newVertices[i * 2] * params.scale;
                 newVertices[i * 2 + 1] = newVertices[i * 2 + 1] * params.scale;
             }
-            gl.uniform1f(angleUniformLocation,  printSineAndCosineForAnyAngle(params.rotate));
+            gl.uniform1f(angleUniformLocation, printSineAndCosineForAnyAngle(params.rotate));
             // for (let i = 0; i < 3; i++) {
             //     newVertices[i * 2] = rotate[1] * newVertices[i * 2] - rotate[0] * newVertices[i * 2 + 1];
             //     newVertices[i * 2 + 1] = rotate[0] * newVertices[i * 2] + newVertices[i * 2 + 1] * rotate[1];

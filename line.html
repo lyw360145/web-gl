@@ -4,14 +4,14 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>线绘制</title>
     <style>
         /* #container-gl {
             width: 800px;
             height: 400px;
         } */
     </style>
-    <script src="./utils/programGl.js" ></script>
+    <script src="./utils/programGl.js"></script>
 </head>
 
 <body>
@@ -40,8 +40,8 @@
             0.5,
             0.0,
             0.1
-            
-           
+
+
         ];
         const vertexBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
@@ -51,10 +51,10 @@
             gl.STATIC_DRAW
         );
         // 创建着色器
-        const vertexShader = getShader(gl,vertexCode,gl.VERTEX_SHADER);
-        const fragmentShader = getShader(gl,fragmentCode,gl.FRAGMENT_SHADER);
+        const vertexShader = getShader(gl, vertexCode, gl.VERTEX_SHADER);
+        const fragmentShader = getShader(gl, fragmentCode, gl.FRAGMENT_SHADER);
         // 创建着色器程序
-        const shaderProgram =getShaderProgram(gl,vertexShader,fragmentShader);
+        const shaderProgram = getShaderProgram(gl, vertexShader, fragmentShader);
         gl.useProgram(shaderProgram);
         // 把坐标传给着色器
         const positionAttributeLocation = gl.getAttribLocation(

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>多点绘制</title>
     <style>
         #container-gl {
             /* width: 50px;
@@ -21,7 +21,7 @@
         const points = []
 
         const canvas = document.getElementById('container-gl');
- 
+
         canvas.addEventListener('click', (e) => {
             let x = e.clientX;
             let y = e.clientY;
@@ -33,7 +33,7 @@
             points.push({
                 x: webglX,
                 y: webglY,
-                color:randomColor()
+                color: randomColor()
             })
             render();
         })
@@ -70,24 +70,22 @@
             shaderProgram,
             'position'
         );
-        const u_color =  gl.getUniformLocation(
+        const u_color = gl.getUniformLocation(
             shaderProgram,
             'u_color'
         );
         const render = () => {
-            points.forEach((point) => {
-                const color = point.color;
-                gl.uniform4f(u_color, color.r, color.g, color.b, 1.0);
-                gl.vertexAttrib2f(u_position,point.x,point.y);
-             
-                gl.drawArrays(gl.POINTS, 0, 1);
-            });
-            
-        }
-        // gl.enableVertexAttribArray(positionAttributeLocation);
-        // gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+                points.forEach((point) => {
+                    const color = point.color;
+                    gl.uniform4f(u_color, color.r, color.g, color.b, 1.0);
+                    gl.vertexAttrib2f(u_position, point.x, point.y);
 
+                    gl.drawArrays(gl.POINTS, 0, 1);
+                });
 
+            }
+            // gl.enableVertexAttribArray(positionAttributeLocation);
+            // gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
     </script>
 </body>
 

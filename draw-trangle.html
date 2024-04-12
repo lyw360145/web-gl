@@ -4,10 +4,10 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>绘制三角形</title>
     <style>
         #container-gl {
-           background: red;
+            background: red;
         }
     </style>
     <script src="./utils/programGl.js"></script>
@@ -36,12 +36,12 @@
         }
       `;
         const vertices = [
-           
+
         ];
         const colors = [
-          
-        ]
-        // 创建着色器
+
+            ]
+            // 创建着色器
         const vertexShader = getShader(gl, vertexCode, gl.VERTEX_SHADER);
         const fragmentShader = getShader(gl, fragmentCode, gl.FRAGMENT_SHADER);
         // 创建着色器程序
@@ -66,7 +66,7 @@
         const colorBuffer = createBuffer(gl, c_color, {
             size: 3
         })
- 
+
         canvas.addEventListener('click', (e) => {
             let x = e.clientX;
             let y = e.clientY;
@@ -78,18 +78,17 @@
             vertices.push(webglX, webglY);
             const color = randomColor();
             colors.push(color.r, color.g, color.b, color.a);
-            if(vertices.length % 6 === 0 ){
+            if (vertices.length % 6 === 0) {
                 render();
             }
         });
         const render = () => {
             gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-            gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(vertices),gl.STATIC_DRAW);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
             gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-            gl.bufferData( gl.ARRAY_BUFFER, new Float32Array(colors),gl.STATIC_DRAW);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
             gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 2);
         }
-
     </script>
 </body>
 
