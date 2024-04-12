@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="
+https://cdn.jsdelivr.net/npm/dat.gui@0.7.9/build/dat.gui.min.js
+"></script>
+    <style>
+        /* #container-gl {
+            width: 00px;
+            height: 400px;
+        } */
+    </style>
+    <script src="./utils/programGl.js"></script>
+</head>
+
+<body>
+    <canvas id="container-gl"> </canvas>
+    <script>
+        // console.log(new  Float32Array([ ]))
+        const matrix = new Float32Array([
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1
+        ])
+
+        const canvas = document.getElementById('container-gl');
+        const gl = canvas.getContext('webgl');
+        const vertexCode = `
+        precision mediump float;
+        attribute vec2 position;
+        attribute vec3 c_color;
+        varying vec4 vertexColor;
+        uniform mat4 uMatrix;
+        void main(){
+           gl_Position = uMatrix * vec4(position,0,1);
+           vertexColor = vec4(c_color,1.0);
+        }
+        `;
+        const fragmentCode = `
+        precision mediump float;
+        varying vec4 vertexColor;
+        void main(){
+          gl_FragColor = vertexColor;
+        }
+      `;
+        var vertices = [-0.2, -0.2,
+            0.0,
+            0.2,
+            0.2, -0.2,
+        ];
+        const colors = [
+            .5, 1, 1,
+            0, .5, 0,
+            0, 0, .5
+        ];
+        // const rotate = [0, 0]
+        function printSineAndCosineForAnyAngle(angleInDegrees) {
+            var angleInRadians = angleInDegrees * Math.PI / 180;
+            return angleInRadians;
+
+        }
+        // 创建着色器
+        const vertexShader = getShader(gl, vertexCode, gl.VERTEX_SHADER);
+        const fragmentShader = getShader(gl, fragmentCode, gl.FRAGMENT_SHADER);
+        // 创建着色器程序
+        const shaderProgram = getShaderProgram(gl, vertexShader, fragmentShader);
+        gl.useProgram(shaderProgram);
+        // 把坐标传给着色器
+        const position = gl.getAttribLocation(
+            shaderProgram,
+            'position'
+        );
+        const c_color = gl.getAttribLocation(
+            shaderProgram,
+            'c_color'
+        );
+        // var angleUniformLocation = gl.getUniformLocation(shaderProgram, 'u_angle');
+        const matrixLocation = gl.getUniformLocation(shaderProgram, "uMatrix");
+        var render = () => {
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            matrix[3] = params.translateX;
+            matrix[7] = params.translateY;
+            const targetMatrix = matrixRowTransforCol(matrix)
+
+            gl.uniformMatrix4fv(matrixLocation, false, targetMatrix);
+
+
+            createBuffer(gl, position, {
+                size: 2
+            });
+
+            gl.bufferData(
+                gl.ARRAY_BUFFER,
+                new Float32Array(vertices),
+                gl.STATIC_DRAW
+            );
+            createBuffer(gl, c_color, {
+                size: 3
+            })
+            gl.bufferData(
+                gl.ARRAY_BUFFER,
+                new Float32Array(colors),
+                gl.STATIC_DRAW
+            );
+            gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 2);
+        }
+        var gui = new dat.GUI();
+
+        // 添加参数到 GUI
+        var params = {
+            translateX: 0,
+            translateY: 0,
+            scale: 1,
+            rotate: 0
+        };
+        gui.add(params, 'translateX', -.8, .8).step(.001).onChange((e) => {
+            params.translateX = e;
+            render()
+        });
+        gui.add(params, 'translateY', -.8, .8).step(.001).onChange((e) => {
+            params.translateY = e;
+            render()
+        });
+        // gui.add(params, 'scale', 1, 5).step(.001).onChange((e) => {
+        //     params.scale = e;
+        //     render()
+        // });
+        // gui.add(params, 'rotate', 0, 360).step(.001).onChange((e) => {
+        //     params.rotate = e;
+        //     render()
+        // });
+        // render()
+    </script>
+</body>
+
+</html>
