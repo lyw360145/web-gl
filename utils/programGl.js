@@ -11,8 +11,13 @@ const getShaderProgram = (gl, vertexShader, fragmentShader) => {
     gl.attachShader(shaderProgram, fragmentShader);
     gl.linkProgram(shaderProgram);
     let success = gl.getProgramParameter(shaderProgram, gl.LINK_STATUS);
+    // return shaderProgram;
+    if (success) {
+        return shaderProgram;
+      }
 
-    return shaderProgram;
+     console.error(gl.getProgramInfoLog(shaderProgram));
+//   gl.deleteProgram(shaderProgram);
 }
 const randomColor = () => {
         const random = Math.random;
@@ -25,6 +30,7 @@ const randomColor = () => {
     }
     // 按顺序
 const createBuffer = (gl, attribute, vertexAttribPointer) => {
+        //  offset开始读取 stride 每读取一次偏移量
         let { size, type, normalize, stride, offset } = vertexAttribPointer;
         gl.enableVertexAttribArray(attribute);
         let buffer = gl.createBuffer();

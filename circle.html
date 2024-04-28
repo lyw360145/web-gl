@@ -1,54 +1,134 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rotating Cube</title>
-<style>
-  .cube {
-    position: relative;
-    width: 100px;
-    transform-style: preserve-3d;
-    transition: transform 1s; /* 设置旋转动画的持续时间 */
-  }
-
-  .cube div {
-    position: absolute;
-    width: 100px;
-    height: 100px;
-    background-color: rgba(255,255,255,0.8);
-    border: 1px solid #ccc;
-  }
-
-  .cube .front { transform: translateZ(50px); }
-  .cube .back { transform: rotateY(180deg) translateZ(50px); }
-  .cube .left { transform: rotateY(-90deg) translateZ(50px); }
-  .cube .right { transform: rotateY(90deg) translateZ(50px); }
-  .cube .top { transform: rotateX(90deg) translateZ(50px); }
-  .cube .bottom { transform: rotateX(-90deg) translateZ(50px); }
-
-  /* 旋转动画的关键帧 */
-  @keyframes rotateCube {
-    0% { transform: rotateX(0deg) rotateY(0deg); }
-    100% { transform: rotateX(360deg) rotateY(360deg); }
-  }
-
-  /* 应用动画 */
-  .cube:hover {
-    animation: rotateCube 2s linear infinite;
-  }
-</style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>多点绘制</title>
+    <style>
+        #container-gl {
+            /* width: 50px;
+            height: 250px; */
+            /* background: green; */
+        }
+    </style>
+    <script src="./utils/programGl.js"></script>
 </head>
+
 <body>
+    <canvas width="500" height="500" id="container-gl"> </canvas>
+    <script>
+        const points = []
 
-<div class="cube">
-  <div class="front"></div>
-  <div class="back"></div>
-  <div class="left"></div>
-  <div class="right"></div>
-  <div class="top"></div>
-  <div class="bottom"></div>
-</div>
+        const canvas = document.getElementById('container-gl');
 
+        const createCircle = (x, y, radius, n) => {
+            const vertices = [];
+            vertices.push(x, y, 255, 255 ,0, 1);
+
+            for (let i = 0; i <= n; i++) {
+                const angle = (2 * Math.PI / n) * i;
+                const x1 = x + radius * Math.cos(angle);
+                const y1 = y + radius * Math.sin(angle);
+                vertices.push(x1, y1, 255, 0, 0, 1);
+            }
+            return vertices;
+        };
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        const vertexCode = `
+        precision mediump float;
+        attribute vec2 a_position;
+        attribute vec2 a_Screen_Size;
+        attribute vec4 a_color;
+        varying vec4 f_color;
+        void main(){
+           vec2 position = (a_position / a_Screen_Size) * 2.0 - 1.0;
+            // canvas的 Y 轴坐标方向和设备坐标系的相反。
+            position = position * vec2(1.0, -1.0);
+            // 最终的顶点坐标。
+            gl_Position = vec4(position, 0.0, 1.0);
+            f_color =  a_color;
+            
+        }
+        `;
+        const fragmentCode = `
+        precision mediump float;
+        varying vec4 f_color;
+        void main(){
+            vec4 color = f_color / vec4(255,255,255,1);
+            gl_FragColor = color;
+            
+        }
+      `;
+        const vertexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+
+        // 创建着色器
+        const vertexShader = getShader(gl, vertexCode, gl.VERTEX_SHADER);
+        const fragmentShader = getShader(gl, fragmentCode, gl.FRAGMENT_SHADER);
+        // 创建着色器程序
+        console.log('getProgramInfoLog',vertexShader)
+        const shaderProgram = getShaderProgram(gl, vertexShader, fragmentShader);
+  
+        gl.useProgram(shaderProgram);
+        // 把坐标传给着色器
+        const a_position = gl.getAttribLocation(
+            shaderProgram,
+            'a_position'
+        );
+        const aColor = gl.getAttribLocation(shaderProgram, 'a_color');
+        const a_Screen_Size = gl.getAttribLocation(
+            shaderProgram,
+            'a_Screen_Size'
+        );
+
+        gl.vertexAttrib2f(a_Screen_Size, canvas.width, canvas.height);
+        // 设置画布颜色
+        const vertices = createCircle(100, 100, 50, 64);
+        // 启动缓冲区  enableVertexAttribArray =》 bufferData 赋值过程
+        gl.enableVertexAttribArray(aColor);
+        gl.enableVertexAttribArray(a_position);
+        let buffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+        gl.vertexAttribPointer(
+            a_position,
+            2,
+             gl.FLOAT,
+            false,
+            24,
+            0
+        );
+        gl.vertexAttribPointer(
+            aColor,
+            2,
+             gl.FLOAT,
+            false,
+            24,
+            8
+        );
+        gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array(vertices),
+            gl.STATIC_DRAW
+        );
+        // createBuffer(gl, a_position, {
+        //     size: 2,
+        //     stride: 24
+        // })
+        // createBuffer(gl, aColor, {
+        //     size: 4,
+        //     stride: 24,
+        //     offset: 8
+        // })
+        gl.clearColor(0, 0, 0, 1);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+     
+
+
+        gl.drawArrays(gl.TRIANGLE_FAN, 0, vertices.length / 6);
+        // gl.enableVertexAttribArray(positionAttributeLocation);
+        // gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+    </script>
 </body>
+
 </html>
