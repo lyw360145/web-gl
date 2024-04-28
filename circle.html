@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rotating Cube</title>
+<style>
+  .cube {
+    position: relative;
+    width: 100px;
+    transform-style: preserve-3d;
+    transition: transform 1s; /* 设置旋转动画的持续时间 */
+  }
+
+  .cube div {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    background-color: rgba(255,255,255,0.8);
+    border: 1px solid #ccc;
+  }
+
+  .cube .front { transform: translateZ(50px); }
+  .cube .back { transform: rotateY(180deg) translateZ(50px); }
+  .cube .left { transform: rotateY(-90deg) translateZ(50px); }
+  .cube .right { transform: rotateY(90deg) translateZ(50px); }
+  .cube .top { transform: rotateX(90deg) translateZ(50px); }
+  .cube .bottom { transform: rotateX(-90deg) translateZ(50px); }
+
+  /* 旋转动画的关键帧 */
+  @keyframes rotateCube {
+    0% { transform: rotateX(0deg) rotateY(0deg); }
+    100% { transform: rotateX(360deg) rotateY(360deg); }
+  }
+
+  /* 应用动画 */
+  .cube:hover {
+    animation: rotateCube 2s linear infinite;
+  }
+</style>
+</head>
+<body>
+
+<div class="cube">
+  <div class="front"></div>
+  <div class="back"></div>
+  <div class="left"></div>
+  <div class="right"></div>
+  <div class="top"></div>
+  <div class="bottom"></div>
+</div>
+
+</body>
+</html>

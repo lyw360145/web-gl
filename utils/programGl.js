@@ -11,7 +11,6 @@ const getShaderProgram = (gl, vertexShader, fragmentShader) => {
     gl.attachShader(shaderProgram, fragmentShader);
     gl.linkProgram(shaderProgram);
     let success = gl.getProgramParameter(shaderProgram, gl.LINK_STATUS);
-    console.log(success, 'success')
 
     return shaderProgram;
 }

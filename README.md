@@ -14,6 +14,9 @@
 ## 矩阵模型
 就是通过计算生成的矩阵
 
+## 公式
+
+
 
 ##  翻译工具 （沉浸式翻譯）
 https://immersivetranslate.com/zh-TW/
