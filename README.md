@@ -24,15 +24,3 @@ https://immersivetranslate.com/zh-TW/
 ## webgl 尽量用带小数点
 
 
-  const createCircle = (x, y, radius, n) => {
-            const vertices = [];
-            vertices.push(x, y, 0, 0, 255, 0);
-
-            for (let i = 0; i < n; i++) {
-                const angle = (2 * Math.PI / n) * i;
-                const x1 = x + radius * Math.cos(angle);
-                const y1 = y + radius * Math.sin(angle);
-                vertices.push(x1, y1, 0, 0, 255, 0);
-            }
-            return vertices;
-        };
