@@ -85,7 +85,7 @@ https://cdn.jsdelivr.net/npm/dat.gui@0.7.9/build/dat.gui.min.js
             gl.clear(gl.COLOR_BUFFER_BIT);
 
 
-            // 矩阵模型
+            // 模型矩阵
             const targetMatrix = matrixRowTransforCol(tepmMatrix, matrix)
 
             gl.uniformMatrix4fv(matrixLocation, false, targetMatrix);
@@ -116,7 +116,9 @@ https://cdn.jsdelivr.net/npm/dat.gui@0.7.9/build/dat.gui.min.js
             translateX: 0,
             translateY: 0,
             scale: 1,
-            rotate: 0
+            rotateX: 0,
+            rotateY: 0,
+            rotateZ: 0,
         };
         const setTranslateMatrix = (e) => {
             tepmMatrix = new Float32Array(matrix);
@@ -137,12 +139,34 @@ https://cdn.jsdelivr.net/npm/dat.gui@0.7.9/build/dat.gui.min.js
             tepmMatrix[5] = tepmMatrix[5] * params.scale;
             render()
         });
-        gui.add(params, 'rotate', 0, 360).step(.001).onChange((e) => {
+         // 三角形绕着X轴旋转
+        gui.add(params, 'rotateX', 0, 360).step(.001).onChange((e) => {
             tepmMatrix = new Float32Array(matrix);
-            tepmMatrix[0] = Math.cos(printSineAndCosineForAnyAngle(params.rotate));
-            tepmMatrix[1] = -Math.sin(printSineAndCosineForAnyAngle(params.rotate));
-            tepmMatrix[4] = Math.sin(printSineAndCosineForAnyAngle(params.rotate));
-            tepmMatrix[5] = Math.cos(printSineAndCosineForAnyAngle(params.rotate));
+            const angle = printSineAndCosineForAnyAngle(params.rotateX);
+            tepmMatrix[5] = Math.cos(angle);
+            tepmMatrix[6] = -Math.sin(angle);
+            tepmMatrix[9] = Math.sin(angle);
+            tepmMatrix[10] = Math.cos(angle);
+            render()
+        });
+        // 三角形绕着Y轴旋转
+        gui.add(params, 'rotateY', 0, 360).step(.001).onChange((e) => {
+            tepmMatrix = new Float32Array(matrix);
+            const angle = printSineAndCosineForAnyAngle(params.rotateY);
+            tepmMatrix[0] = Math.cos(angle);
+            tepmMatrix[2] = -Math.sin(angle);
+            tepmMatrix[12] = Math.sin(angle);
+            tepmMatrix[14] = Math.cos(angle);
+            render()
+        });
+        // 三角形绕着Z轴旋转
+        gui.add(params, 'rotateZ', 0, 360).step(.001).onChange((e) => {
+            tepmMatrix = new Float32Array(matrix);
+            const angle = printSineAndCosineForAnyAngle(params.rotateZ);
+            tepmMatrix[0] = Math.cos(angle);
+            tepmMatrix[1] = -Math.sin(angle);
+            tepmMatrix[4] = Math.sin(angle);
+            tepmMatrix[5] = Math.cos(angle);
             render()
         });
         render()

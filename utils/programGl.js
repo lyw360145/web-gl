@@ -77,3 +77,8 @@ function matrixRowTransforCol(matrix, defualt) {
 
     return target;
 }
+function printSineAndCosineForAnyAngle(angleInDegrees) {
+    var angleInRadians = angleInDegrees * Math.PI / 180;
+    return angleInRadians;
+
+}
