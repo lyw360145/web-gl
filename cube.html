@@ -32,22 +32,22 @@
             -0.5, 0.5, -0.5, 0.45, 0.82, 0.24, 1,
             -0.5, -0.5, -0.5, 0.45, 0.82, 0.24, 1,
             -0.5, -0.5, 0.5, 0.45, 0.82, 0.24, 1,
-            // 蓝
+            // // 蓝
             0.5, 0.5, 0.5, 0.086, 0.53, 1, 1,
             0.5, -0.5, 0.5, 0.086, 0.53, 1, 1,
             0.5, -0.5, -0.5, 0.086, 0.53, 1, 1,
             0.5, 0.5, -0.5, 0.086, 0.53, 1, 1,
-            // 橙
-            0.5, 0.5, -0.5, 0.98, 0.68, 0.078, 1,
-            0.5, -0.5, -0.5, 0.98, 0.68, 0.078, 1,
-            -0.5, -0.5, -0.5, 0.98, 0.68, 0.078, 1,
-            -0.5, 0.5, -0.5, 0.98, 0.68, 0.078, 1,
-            // 红
+            // // 橙
+            0.5, 0.5, -0.5, 1, 1, 1, 1,
+            0.5, -0.5, -0.5, 1, 1, 1, 1,
+            -0.5, -0.5, -0.5, 1, 1, 1, 1,
+            -0.5, 0.5, -0.5, 1, 1, 1, 1,
+            // // 红
             -0.5, 0.5, 0.5, 1, 0.30, 0.31, 1,
             0.5, 0.5, 0.5, 1, 0.30, 0.31, 1,
             0.5, 0.5, -0.5, 1, 0.30, 0.31, 1,
             -0.5, 0.5, -0.5, 1, 0.30, 0.31, 1,
-            // 紫色
+            // // 紫色
             -0.5, -0.5, 0.5, 0.70, 0.50, 0.92, 1,
             -0.5, -0.5, -0.5, 0.70, 0.50, 0.92, 1,
             0.5, -0.5, -0.5, 0.70, 0.50, 0.92, 1,
@@ -55,12 +55,12 @@
 
         ];
         const indices = [
-            0, 1, 2, 2, 3, 0,
-            4, 5, 6, 6, 7, 4,
-            8, 9, 10, 10, 11, 8,
-            12, 13, 14, 14, 15, 12,
-            16, 17, 18, 18, 19, 16,
-            20, 21, 22, 22, 23, 20
+            0, 1, 2, 0, 2, 3,
+            4, 5, 6, 4, 6, 7,
+            8, 9, 10, 8, 10, 11,
+            12, 13, 14, 12, 14, 15,
+            16, 17, 18, 16, 18, 19,
+            20, 21, 22, 20, 22, 23
         ]
         const matrix = [
             1, 0, 0, 0,
@@ -68,19 +68,31 @@
             0, 0, 1, 0,
             0, 0, 0, 1
         ]
-        const modelMatrix = new Float32Array(matrix);
+        let modelMatrix = new Float32Array(matrix);
         const canvas = document.getElementById('container-gl');
         let isClick = false;
         let startPoint = [0, 0]
         canvas.addEventListener('mousemove', (e) => {
             if (isClick) {
                 // console.log()
-                startPoint[1] = Math.abs(e.clientY - startPoint[0]);
-                const angle = printSineAndCosineForAnyAngle(2 * startPoint[1])
-                modelMatrix[5] = Math.cos(angle);
-                modelMatrix[6] = -Math.sin(angle);
-                modelMatrix[9] = Math.sin(angle)
-                modelMatrix[10] = Math.cos(angle)
+                const modelMatrixX =new Float32Array(matrix);
+                const modelMatrixY =new Float32Array(matrix);
+                const baseAngleY = Math.abs(e.clientY - startPoint[1]);
+                const angleY = printSineAndCosineForAnyAngle(baseAngleY)
+                const baseAngleX = Math.abs(e.clientX - startPoint[0]);
+                const angleX = printSineAndCosineForAnyAngle(baseAngleX)
+                 
+
+                modelMatrixX[5] = Math.cos(angleX);
+                modelMatrixX[6] = -Math.sin(angleX);
+                modelMatrixX[9] = Math.sin(angleX)
+                modelMatrixX[10] = Math.cos(angleX)
+                modelMatrixY[0] = Math.cos(angleY);
+                modelMatrixY[2] = -Math.sin(angleY);
+                modelMatrixY[8] = Math.sin(angleY)
+                modelMatrixY[10] = Math.cos(angleY)
+                modelMatrix =  multiply(modelMatrixX,modelMatrixY)
+                console.log(modelMatrix,'modelMatrix')
                 render();
 
             }
@@ -174,11 +186,10 @@
         //设置清屏颜色为黑色。
         // 设置背景颜色
 
-
-
         var render = () => {
-            gl.clearColor(0, 0, 0, 1);
+            gl.clearColor(0, 1, 0, 1);
             gl.clear(gl.COLOR_BUFFER_BIT);
+            gl.enable(gl.CULL_FACE)
             // console.log(modelMatrix,'modelMatrix')
             const targetMatrix = matrixRowTransforCol(modelMatrix);
             // console.log(targetMatrix,'targetMatrix')
@@ -186,7 +197,7 @@
             gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
         }
         render();
-       
+
     </script>
 </body>
 
