@@ -82,3 +82,98 @@ function printSineAndCosineForAnyAngle(angleInDegrees) {
     return angleInRadians;
 
 }
+
+function createSphere(radius, divideByYAxis, divideByCircle) {
+    let yUnitAngle = Math.PI / divideByYAxis;
+    let circleUnitAngle = (Math.PI * 2) / divideByCircle;
+    let positions = [];
+    let normals = [];
+    for (let i = 0; i <= divideByYAxis; i++) {
+      let unitY = Math.cos(yUnitAngle * i);
+      let yValue = radius * unitY;
+  
+      for (let j = 0; j <= divideByCircle; j++) {
+        let unitX = Math.sin(yUnitAngle * i) * Math.cos(circleUnitAngle * j);
+        let unitZ = Math.sin(yUnitAngle * i) * Math.sin(circleUnitAngle * j);
+        let xValue = radius * unitX;
+        let zValue = radius * unitZ;
+        positions.push(xValue, yValue, zValue);
+        normals.push(unitX, unitY, unitZ);
+      }
+    }
+  
+    let indices = [];
+    let circleCount = divideByCircle + 1;
+    for (let j = 0; j < divideByCircle; j++) {
+      for (let i = 0; i < divideByYAxis; i++) {
+        indices.push(i * circleCount + j);
+        indices.push(i * circleCount + j + 1);
+        indices.push((i + 1) * circleCount + j);
+  
+        indices.push((i + 1) * circleCount + j);
+        indices.push(i * circleCount + j + 1);
+        indices.push((i + 1) * circleCount + j + 1);
+      }
+    }
+    return {
+      positions: new Float32Array(positions),
+      indices: new Uint16Array(indices),
+      normals: new Float32Array(normals)
+    };
+  }
+
+  function initBuffers(latitudeBands,longitudeBands,radius) {
+	//存储顶点坐标
+       var vertexPositionData = [];
+	//存储纹理坐标
+       var textureCoordData = [];
+
+	//从纬线开始遍历
+       for (var latNumber=0; latNumber <= latitudeBands; latNumber++) {
+		//计算θ角度
+           var theta = latNumber * Math.PI / latitudeBands;
+           var sinTheta = Math.sin(theta);
+           var cosTheta = Math.cos(theta);
+
+           for (var longNumber=0; longNumber <= longitudeBands; longNumber++) {
+			//计算φ角度
+               var phi = longNumber * 2 * Math.PI / longitudeBands;
+               var sinPhi = Math.sin(phi);
+               var cosPhi = Math.cos(phi);
+			//计算顶点的x,y,z坐标
+               var x = radius * cosPhi * sinTheta;
+               var y = radius * cosTheta;
+               var z = radius * sinPhi * sinTheta;
+			//贴图是矩形的，我们将贴图在X轴上按照经线划分，在Y轴上按照纬线划分，来计算顶点对应的贴图U，V坐标
+               var u = longNumber / longitudeBands;
+               var v = latNumber / latitudeBands;
+			
+			
+               textureCoordData.push(u);
+               textureCoordData.push(v);
+               vertexPositionData.push(x);
+               vertexPositionData.push(y);
+               vertexPositionData.push(z);
+           }
+       }
+	//存储顶点索引
+       var indexData = [];
+       for (var latNumber=0; latNumber < latitudeBands; latNumber++) {
+           for (var longNumber=0; longNumber < longitudeBands; longNumber++) {
+               var A = (latNumber * (longitudeBands + 1)) + longNumber;
+               var B = A + longitudeBands + 1;
+			var C = A + 1;
+			var D = B + 1;
+               indexData.push(A);
+               indexData.push(B);
+               indexData.push(C);
+
+               indexData.push(B);
+               indexData.push(D);
+               indexData.push(C);
+           }
+       }
+    return {
+        indexData,vertexPositionData
+    }
+    }
