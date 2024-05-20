@@ -74,7 +74,6 @@
         let startPoint = [0, 0]
         canvas.addEventListener('mousemove', (e) => {
             if (isClick) {
-                // console.log()
                 startPoint[1] = Math.abs(e.clientY - startPoint[0]);
                 const angle = printSineAndCosineForAnyAngle(2 * startPoint[1])
                 modelMatrix[5] = Math.cos(angle);
@@ -173,10 +172,8 @@
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
         //设置清屏颜色为黑色。
         // 设置背景颜色
-
-
-
         var render = () => {
+            gl.enable(gl.DEPTH_TEST)
             gl.clearColor(0, 0, 0, 1);
             gl.clear(gl.COLOR_BUFFER_BIT);
             // console.log(modelMatrix,'modelMatrix')
