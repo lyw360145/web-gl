@@ -23,4 +23,4 @@ https://immersivetranslate.com/zh-TW/
 
 ## webgl 尽量用带小数点
 
-
+## gl.drawElements（顶点共享）与drawArrays绘制效果不一样
