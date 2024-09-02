@@ -47,19 +47,50 @@
             animation-play-state: paused;
         }
 
-        svg {
-           
+        .pie-svg {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: yellowgreen;
+            position: relative;
+        }
+
+        .svg1 {
+
             /* border-radius: 50%; */
-            fill: yellowgreen;
+            fill: transparent;
             /* fill: */
             transform: rotate(-90deg);
+            
+        }
+
+        .svg2 {
+            position: absolute;
+            left: 0;
+            top: 0;
+            
+            /* border-radius: 50%; */
+            fill: transparent;
+            /* fill: */
+            transform: rotate(0deg);
+        }
+        .svg2:hover{
+            transform: scale(1.1);
         }
 
         .circle1 {
-            fill: yellowgreen;
+
             stroke: #655;
             stroke-width: 32;
-            stroke-dasharray: 25 100; 
+            stroke-dasharray: 25 100;
+            /* 2π × 25 ≈ 158 */
+        }
+
+        .circle2 {
+            /* transform: rotate(-90deg); */
+            stroke: red;
+            stroke-width: 32;
+            stroke-dasharray: 20 100;
             /* 2π × 25 ≈ 158 */
         }
     </style>
@@ -71,22 +102,17 @@
     </div>
     <div class="pie" style="animation-delay: -60s"></div>
 
+ <!-- 饼图多个颜色 -->
+    <div class="pie-svg">
+        <svg class="svg1" width="100" height="100" viewBox="0 0 64 64">
+            <circle class="circle1" r="16" cx="32" cy="32"></circle>
+        </svg>
+        <svg class="svg2" width="100" height="100" viewBox="0 0 64 64">
+            <circle class="circle2" r="16" cx="32" cy="32"></circle>
+        </svg>
+        
+    </div>
 
-    <!-- <svg width="200" height="200">
-        <circle  r="50" cx="100" cy="100" />
-        <circle class="circle1"  r="25" cx="100" cy="100" />
-       </svg> -->
-    <!-- <script>
-        const pip = document.querySelectorAll('.pie');
-        pip.forEach(function (pie) {
-            var p = parseFloat(pie.textContent);
-            pie.style.animationDelay = '-' + p + 's';
-        });
-    </script> -->
-    <svg width="100" height="100" viewBox="0 0 64 64" >
-        <circle  r="32" cx="32" cy="32" ></circle>
-        <circle  class="circle1" r="16" cx="32" cy="32" ></circle>
-    </svg>
 </body>
 
 </html>
