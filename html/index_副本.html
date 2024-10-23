@@ -1,65 +1,33 @@
-<html>
-
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name=viewport
-    content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,minimal-ui">
-  <meta name="referrer" content="no-referrer">
-  <title>长航时无人艇赛马测评大赛</title>
-  <style type="text/css">
-    html,
-    body {
-      width: 100%;
-      height: 100%;
-      margin: auto;
-      overflow: hidden;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  .header {
+    background: #3498db;
+    padding: 10px;
+    color: white;
+    text-align: center;
+    position: sticky;
+    top: 0; /* 当滚动到顶部时，header 将会粘住 */
+    z-index: 1000; /* 保持在其他内容之上 */
+  }
 
-    body {
-      display: flex;
-    }
-
-    #mse {
-      flex: auto;
-    }
-  </style>
-  <script type="text/javascript">
-    window.addEventListener('resize', function () { document.getElementById('mse').style.height = window.innerHeight + 'px'; });
-  </script>
+  .content {
+    height: 2000px; /* 为了演示滚动效果 */
+    background: #f4f4f4;
+    padding: 20px;
+  }
+</style>
 </head>
-
 <body>
-  <div id="mse"></div>
-  <script src="//unpkg.byted-static.com/xgplayer/2.31.6/browser/index.js" charset="utf-8"></script>
-  <script src="//unpkg.byted-static.com/xgplayer-hls/2.5.2/dist/index.min.js" charset="utf-8"></script>
-  <script type="text/javascript">
-    const title = document.querySelector('title');
-
-    // 获取整个查询字符串
-    const queryString = window.location.search;
-    // 使用 URLSearchParams 解析查询字符串
-    const urlParams = new URLSearchParams(queryString);
-    // 获取特定参数的值
-    const paramValue = urlParams.get('id');
-
-    fetch(`${window.location.href.includes('127.0.0.1') ? `https://test.spido.net/ocean_api/main/live/getLive?id=${paramValue}` :`/ocean_api/main/live/getLive?id=${paramValue}` }`).then(res => {
-      return res.json();
-    }).then(data => {
-      title.innerHTML = data.result.title;
-      new HlsPlayer({
-        id: 'mse',
-        url: data.result.url,
-        isLive: true,
-        autoplay: true,
-        playsinline: true,
-        height: window.innerHeight,
-        width: window.innerWidth
-      });
-
-    })
 
 
-  </script>
+<div class="content">
+  <div class="header">Sticky Header</div>
+  Scroll down to see the sticky header in action.
+</div>
+
 </body>
-
 </html>
