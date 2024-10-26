@@ -74,25 +74,12 @@
         let startPoint = [0, 0]
         canvas.addEventListener('mousemove', (e) => {
             if (isClick) {
-                // console.log()
-                const modelMatrixX =new Float32Array(matrix);
-                const modelMatrixY =new Float32Array(matrix);
-                const baseAngleY = Math.abs(e.clientY - startPoint[1]);
-                const angleY = printSineAndCosineForAnyAngle(baseAngleY)
-                const baseAngleX = Math.abs(e.clientX - startPoint[0]);
-                const angleX = printSineAndCosineForAnyAngle(baseAngleX)
-                 
-
-                modelMatrixX[5] = Math.cos(angleX);
-                modelMatrixX[6] = -Math.sin(angleX);
-                modelMatrixX[9] = Math.sin(angleX)
-                modelMatrixX[10] = Math.cos(angleX)
-                modelMatrixY[0] = Math.cos(angleY);
-                modelMatrixY[2] = -Math.sin(angleY);
-                modelMatrixY[8] = Math.sin(angleY)
-                modelMatrixY[10] = Math.cos(angleY)
-                modelMatrix =  multiply(modelMatrixX,modelMatrixY)
-                console.log(modelMatrix,'modelMatrix')
+                startPoint[1] = Math.abs(e.clientY - startPoint[0]);
+                const angle = printSineAndCosineForAnyAngle(2 * startPoint[1])
+                modelMatrix[5] = Math.cos(angle);
+                modelMatrix[6] = -Math.sin(angle);
+                modelMatrix[9] = Math.sin(angle)
+                modelMatrix[10] = Math.cos(angle)
                 render();
 
             }
@@ -185,9 +172,9 @@
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
         //设置清屏颜色为黑色。
         // 设置背景颜色
-
         var render = () => {
-            gl.clearColor(0, 1, 0, 1);
+            gl.enable(gl.DEPTH_TEST)
+            gl.clearColor(0, 0, 0, 1);
             gl.clear(gl.COLOR_BUFFER_BIT);
             gl.enable(gl.CULL_FACE)
             // console.log(modelMatrix,'modelMatrix')

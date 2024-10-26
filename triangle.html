@@ -6,13 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>三角形（同理多变行绘制）</title>
     <style>
-
+        /* #container-gl {
+            width: 800px;
+            height: 400px;
+        } */
     </style>
     <script src="./utils/programGl.js"></script>
 </head>
 
 <body>
-    <canvas width="800" height="800" id="container-gl"> </canvas>
+    <canvas id="container-gl"> </canvas>
     <script>
         const canvas = document.getElementById('container-gl');
         const gl = canvas.getContext('webgl');
@@ -40,29 +43,21 @@
             0.5,
             0.5,
             0.0,
-
-            0.0,
-            0.0,
-            0.5,
-            0.5,
-            0.0,
-            0.5,
         ];
         const colors = [
                 .5, 1, 1,
-                0, .5, 0,
-                0, 0, .5,
-                1, 1, 1,
-                1, 1, 0,
-                0, 0, .5,
 
+                0, .5, 0,
+                0, 0, .5
             ]
             // 创建着色器
+  
         const vertexShader = getShader(gl, vertexCode, gl.VERTEX_SHADER);
         const fragmentShader = getShader(gl, fragmentCode, gl.FRAGMENT_SHADER);
         // 创建着色器程序
         const shaderProgram = getShaderProgram(gl, vertexShader, fragmentShader);
         gl.useProgram(shaderProgram);
+        const vertexBuffer = gl.createBuffer();
 
 
         // 把坐标传给着色器
@@ -85,14 +80,12 @@
         createBuffer(gl, c_color, {
             size: 3
         })
-        //设置清屏颜色为黑色。
-    gl.clearColor(0, 0, 0, 1)
-    gl.clear(gl.COLOR_BUFFER_BIT);
         gl.bufferData(
             gl.ARRAY_BUFFER,
             new Float32Array(colors),
             gl.STATIC_DRAW
         );
+      
         gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 2);
     </script>
 </body>

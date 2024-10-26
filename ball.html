@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>绘制圆</title>
+    <style>
+        #container-gl {
+            /* width: 50px;
+            height: 250px; */
+            /* background: green; */
+        }
+    </style>
+    <script src="./utils/programGl.js"></script>
+</head>
+
+<body>
+    <canvas width="1000" height="1000" id="container-gl"> </canvas>
+    <script>
+        const points = []
+
+        const canvas = document.getElementById('container-gl');
+        const createBall = (latitudeBands,longitudeBands,radius) => {
+            let vertices = [];
+            const indices = [];
+            for (var latNumber=0; latNumber <= latitudeBands; latNumber++) {
+		//计算θ角度
+           var theta = latNumber * Math.PI / latitudeBands;
+           var sinTheta = Math.sin(theta);
+           var cosTheta = Math.cos(theta);
+
+           for (var longNumber=0; longNumber <= longitudeBands; longNumber++) {
+			//计算φ角度
+               var phi = longNumber * 2 * Math.PI / longitudeBands;
+               var sinPhi = Math.sin(phi);
+               var cosPhi = Math.cos(phi);
+			//计算顶点的x,y,z坐标
+               var x = radius * cosPhi * sinTheta;
+               var y = radius * cosTheta;
+               var z = radius * sinPhi * sinTheta;
+		
+			
+               vertices.push(x,y,z);
+               vertices.push(Math.random(),Math.random(),Math.random(),1);
+           }
+       }
+       console.log(vertices.length,'verticesverticesvertices')
+       for (var latNumber=0; latNumber < latitudeBands; latNumber++) {
+           for (var longNumber=0; longNumber < longitudeBands; longNumber++) {
+               var A = (latNumber * (longitudeBands + 1)) + longNumber;
+               var B = A + longitudeBands + 1;
+			var C = A + 1;
+			var D = B + 1;
+            indices.push(A);
+            indices.push(B);
+            indices.push(C);
+
+            indices.push(B);
+            indices.push(D);
+            indices.push(C);
+           }
+       }
+           
+            return {
+                vertices,
+                indices
+            };
+        };
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        const vertexCode = `
+        precision mediump float;
+        attribute vec3 a_position;
+        attribute vec4 a_color;
+        varying vec4 f_color;
+        void main(){
+         
+            gl_Position =vec4(a_position,1);
+            f_color =  a_color;
+            
+        }
+        `;
+        const fragmentCode = `
+        precision mediump float;
+        varying vec4 f_color;
+        void main(){
+            gl_FragColor = f_color ;
+            
+        }
+      `;
+ 
+        const vertexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+
+        // 创建着色器
+        const vertexShader = getShader(gl, vertexCode, gl.VERTEX_SHADER);
+        const fragmentShader = getShader(gl, fragmentCode, gl.FRAGMENT_SHADER);
+        // 创建着色器程序
+        const shaderProgram = getShaderProgram(gl, vertexShader, fragmentShader);
+  
+        gl.useProgram(shaderProgram);
+        // 把坐标传给着色器
+        const a_position = gl.getAttribLocation(
+            shaderProgram,
+            'a_position'
+        );
+        const aColor = gl.getAttribLocation(shaderProgram, 'a_color');
+
+        // 设置画布颜色
+        // const vertices = createCircle(100, 100, 50, 64);
+        const { vertices, indices}  = createBall(10,10,.5)
+        console.log(vertices, indices)
+        let indicesBuffer = gl.createBuffer();
+        //绑定索引缓冲区
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer);
+        //向索引缓冲区传递索引数据
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+
+        // 启动缓冲区  enableVertexAttribArray =》 bufferData 赋值过程
+        gl.enableVertexAttribArray(aColor);
+        gl.enableVertexAttribArray(a_position);
+        let buffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+        gl.vertexAttribPointer(
+            a_position,
+            3,
+             gl.FLOAT,
+            false,
+            28,
+            0
+        );
+        gl.vertexAttribPointer(
+            aColor,
+             // 读取多少个点
+            4,
+             gl.FLOAT,
+            false,
+            //  读取7个点，每个点占4个字节
+            28,
+            //  从第几个点读取
+            12
+        );
+        gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array(vertices),
+            gl.STATIC_DRAW
+        );
+      
+        gl.enable(gl.CULL_FACE);
+        // 设置背景颜色
+        gl.clearColor(0, 0, 0, 1);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+     
+        gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
+
+
+    </script>
+</body>
+
+</html>
