@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .avatar-circle{
+            width: 200px;
+            height: 200px;
+            background: yellow;
+            border-radius: 50%;
+            position: relative;
+            transform-origin: 50%;
+            animation:rotate 3s linear infinite 
+            
+        }
+        img{
+            width: 40px;
+            position: absolute;
+            left: 50px;
+            top: 50px;
+        ;
+        }
+        @keyframes rotate{
+            0%{
+                transform: rotate(0deg);
+            }
+            100%{
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="avatar-circle">
+        <img src="https://oss.console.hainancaip.com/head/headimg.png?Expires=1729656594&OSSAccessKeyId=LTAI5tE74WxwszKQiKRcBU9c&Signature=zlZgPCyYBH6vZe0nsIgdzJ3ApUw%3D" alt="">
+
+    </div>
+</body>
+</html>

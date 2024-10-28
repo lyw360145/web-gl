@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  .header {
+    background: #3498db;
+    padding: 10px;
+    color: white;
+    text-align: center;
+    position: sticky;
+    top: 0; /* 当滚动到顶部时，header 将会粘住 */
+    z-index: 1000; /* 保持在其他内容之上 */
+  }
+
+  .content {
+    height: 2000px; /* 为了演示滚动效果 */
+    background: #f4f4f4;
+    padding: 20px;
+  }
+</style>
+</head>
+<body>
+
+
+<div class="content">
+  <div class="header">Sticky Header</div>
+  Scroll down to see the sticky header in action.
+</div>
+
+</body>
+</html>

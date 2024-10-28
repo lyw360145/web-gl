@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    .container {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; /* 让内容从下往上排列 */
+  height: auto; /* 自动根据内容撑起 */
+  min-height: 300px; /* 设置最小高度 */
+  border: 1px solid #000; /* 可视化边框 */
+}
+
+.item {
+  padding: 10px;
+  background-color: lightblue;
+  margin: 5px;
+}
+</style>
+<body>
+    <div class="container">
+        <div class="item">内容 1</div>
+        <div class="item">内容 2</div>
+        <div class="item">内容 3</div>
+      </div>
+</body>
+</html>

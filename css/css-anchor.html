@@ -1,0 +1,47 @@
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Table Example</title>
+  <style>
+    .one {
+      width: 50px;
+      height: 50px;
+      background: red;
+      anchor-name: --anchor-one;
+    }
+
+    .two {
+
+      /* right: 0;
+      top: 0; */
+      position-anchor: --anchor-one;
+      position: absolute;
+      bottom: anchor(top);
+      left: anchor(right);
+      width: 50px;
+      height: 50px;
+      background: blue;
+      /* justify-self: anchor-center; */
+
+    }
+  </style>
+</head>
+
+<body>
+
+
+  <div class="one">
+    one
+
+  </div>
+
+  <div class="two">
+    two
+  </div>
+
+
+</body>
+
+</html>

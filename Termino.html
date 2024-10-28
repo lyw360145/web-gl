@@ -6,20 +6,12 @@
     <body>
       <div id="terminal">
       <pre><code class="termino-console"></code></pre>
-      <textarea class="termino-input" id="textarea-id"  rows="1" wrap="hard"></textarea>
+      <textarea class="termino-input" rows="1" wrap="hard"></textarea>
       </div>
       <script type="module">
-        import {Termino} from 'https://cdn.jsdelivr.net/gh/MarketingPipeline/Termino.js@v1.0.2/dist/termino.min.js';
+        import {Termino} from 'https://cdn.jsdelivr.net/gh/MarketingPipeline/Termino.js@latest/dist/termino.min.js';
         let term= Termino(document.getElementById("terminal"))
         term.echo("Hello world from https://github.com/MarketingPipeline")
-        const textarea = document.getElementById('textarea-id');
-       
-        textarea.addEventListener('keydown', function(event) {
-            console.log(event.keyCode,'xxxx')
-            if(event.keyCode === 13){
-                alert('Hello World!');
-            }
-        })
       </script>
     </body>
   </html>
