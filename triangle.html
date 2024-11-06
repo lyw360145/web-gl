@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>三角形（同理多变行绘制）</title>
+    <style>
+        /* #container-gl {
+            width: 800px;
+            height: 400px;
+        } */
+    </style>
+    <script src="./utils/programGl.js"></script>
+</head>
+
+<body>
+    <canvas id="container-gl"> </canvas>
+    <script>
+        const canvas = document.getElementById('container-gl');
+        const gl = canvas.getContext('webgl');
+        const vertexCode = `
+        precision mediump float;
+        attribute vec3 position;
+        attribute vec3 c_color;
+        varying vec4 vertexColor;
+        void main(){
+           gl_Position = vec4(position,1.0);
+           vertexColor = vec4(c_color,1.0);
+        }
+        `;
+        const fragmentCode = `
+        precision mediump float;
+        varying vec4 vertexColor;
+        void main(){
+          gl_FragColor = vertexColor;
+        }
+      `;
+        const vertices = [
+            0.0,
+            0.0,
+            0.5,
+            0.5,
+            0.5,
+            0.0,
+        ];
+        const colors = [
+                .5, 1, 1,
+
+                0, .5, 0,
+                0, 0, .5
+            ]
+            // 创建着色器
+  
+        const vertexShader = getShader(gl, vertexCode, gl.VERTEX_SHADER);
+        const fragmentShader = getShader(gl, fragmentCode, gl.FRAGMENT_SHADER);
+        // 创建着色器程序
+        const shaderProgram = getShaderProgram(gl, vertexShader, fragmentShader);
+        gl.useProgram(shaderProgram);
+        const vertexBuffer = gl.createBuffer();
+
+
+        // 把坐标传给着色器
+        const position = gl.getAttribLocation(
+            shaderProgram,
+            'position'
+        );
+        const c_color = gl.getAttribLocation(
+            shaderProgram,
+            'c_color'
+        );
+        createBuffer(gl, position, {
+            size: 2
+        })
+        gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array(vertices),
+            gl.STATIC_DRAW
+        );
+        createBuffer(gl, c_color, {
+            size: 3
+        })
+        gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array(colors),
+            gl.STATIC_DRAW
+        );
+      
+        gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 2);
+    </script>
+</body>
+
+</html>
