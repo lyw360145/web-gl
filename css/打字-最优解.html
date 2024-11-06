@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>打字效果</title>
+    <style>
+        .typewriter {
+            font-family: monospace;
+            white-space: nowrap;
+            overflow: hidden;
+            /* 只显示一行 */
+            border-right: 3px solid;
+            /* 打字光标 */
+            width: 0;
+            /* 初始宽度为0 */
+            animation: typing 4s steps(100, end) forwards, blink-caret .75s step-end infinite;
+        }
+
+        @keyframes typing {
+            from {
+                width: 0;
+            }
+
+            to {
+                width: 20ch;
+            }
+        }
+
+        @keyframes blink-caret {
+
+            from,
+            to {
+                border-color: transparent;
+            }
+
+            50% {
+                border-color: black;
+            }
+        }
+    </style>
+</head>
+1 2 3 0 1 2 0 1
+
+<body>
+    1
+    1 2 值1 a[0][0] = 1 a[0][1] = 2
+
+    1 2 0 1 值 2
+
+    3 5 2 4 a[1][0] = 3 a[1][1] = 5 a[1][2] = 3 a[1][3] = 4
+
+    1 2 0 1 1 2 0 1 值 3
+
+    6 9 5 8 5 8 4 7
+
+    1 2 0 1 1 2 0 1 1 2 0 1 值 3
+
+    7 12 9 12 8 11 8 11 7 10 7 10
+
+    1 2 0 1 1 2 0 1 1 2 0 1 1 2 0 1 1 2 0 1 1 2 0 1 1 2 值 2
+
+    9 11 12 14 11 13 12 14 11 13 10 12 11 13 9 11 12 14 9 11 12 14
+
+    ：n = 6 ,k = 3 ,data = [4, 1, 5, 2, 1, 3]
+
+    4
+    1 2 3
+    4 8 12 值4
+    1 2 3 0 1 2 0 1 值 1
+    5 6 7 8 9 10 12 13
+    123 3
+    12301201 8
+    12301201 12301201 01201 21 8 *2 +5
+    12301201 12301201 01201 12301201 12301201 02101 12301201 01201 8*5 +5*3
+    12301201 12301201 01201 12301201 12301201 02101 12301201 01201 12301201 12301201 02101 12301201 12301201 02101
+    12301201 01201 12301201 12301201 02101 12302101 01201 13*8 + 5*8
+
+
+    12 2
+    1201 4
+    12011201 8
+    120112011201 16
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h1 class="typewriter">abc</h1>
+    ｜
+    1 2 1
+    1 2 0 2
+    1 2 0 3
+    1 2 0 3
+    1 0 2
+    ｜
+
+    ｜
+    1 2
+    3 4 2
+    6 9 7 4 5
+    9 12 9 12 10 7 10 8 11
+    11 12 12 12 9 12 10 13
+    ｜
+
+
+    1 2 3 4 5 6 7 8 9 10
+
+    怎么第二天可购买的次数？
+
+    n = 6 ,k = 3
+
+
+
+</body>
+<script>
+    function minCost(N, K, prices) {
+        const everyDayMoney = prices.shift();
+
+        for (let i = 0; i <= N; i++) {
+            const everyDayCount = (N - 1, K, prices, 1, 2) => {
+
+            }
+        }
+
+    }
+</script>
+<script>
+    var prices = [4, 1, 5, 2, 1, 3];
+    var K = 3;
+    var N = 6;
+    function minCost(N, K, prices) {
+        let dp = Array.from({
+            length: N
+        }, () => Array());
+        let dp1 = Array.from({
+            length: N
+        }, () => Array());
+
+
+        for (let i = 1; i <= N; i++) {
+            // debugger;
+
+            if (i === 1) {
+                for (let j = 1; j <= K; j++) {
+                    dp[i - 1][j - 1] = prices[i - 1] * j;
+                    // 目前携带多少份食物
+                    dp1[i - 1][j - 1] = j - 1
+                }
+
+            } else {
+                let column = 0;
+                // 前一天的结果
+                let current = i - 2;
+                // 计算今天要购买的食物数量的可能
+                for (let j = 0; j < dp[current].length; j++) {
+                    // 没有剩食物，必须要购买了
+                    if (dp1[current][j] === 0) {
+                        for (let f = 1; f <= K; f++) {
+                            dp[i - 1][column] = dp[current][j] + prices[i - 1] * f;
+                            // 目前携带多少份食物
+                            dp1[i - 1][column] = f - 1;
+                            column++
+                        }
+                        // 还剩食物，是否购买
+                    } else {
+                        // 至多可购买多少分
+                        let count = K - dp1[current][j];
+                        // 目前可够买食物数量
+                        for (let f = 0; f <= count; f++) {
+                            dp[i - 1][column] = dp[current][j] + prices[i - 1] * f;
+                            // 目前携带多少份食物
+                            dp1[i - 1][column] = dp1[current][j] - 1 + f;
+                            column++
+                        }
+                    }
+
+                }
+            }
+
+        }
+        return Math.min(...dp[N - 1]);
+    }
+    minCost(N, K, prices)
+
+
+
+    function minCostToTravel(n, k, data) {
+        let totalCost = 0;
+        let foodCarried = 0;
+        const minHeap = []; // 小顶堆，存储食物价格
+
+        // 引入一个辅助方法，用于小顶堆插入
+        function pushToMinHeap(val) {
+            minHeap.push(val);
+            minHeap.sort((a, b) => a - b);
+        }
+
+        // 遍历每天的补给站
+        for (let i = 0; i < n; i++) {
+            pushToMinHeap(data[i]);
+
+            // 每天消耗1份食物
+            if (foodCarried > 0) foodCarried--;
+
+            // 检查是否需要购买额外的食物
+            while (foodCarried < k && minHeap.length > 0) {
+                totalCost += minHeap.shift(); // 从小顶堆取出最低价格的食物
+                foodCarried++;
+            }
+        }
+
+        return totalCost;
+    }
+
+    var n = 5, H = 10, A = 10, h = [6, 9, 12, 4, 7], a = [8, 9, 10, 2, 5]
+    function solution(n, H, A, h, a) {
+        // write code here
+        // 攻击与血量最大 误差最小
+        const absoluteErrorValues = []
+        for (let i = 0; i < n; i++) {
+            absoluteErrorValues.push({
+                absoluteErrorValue: Math.abs(h[i] - a[i]),
+                a: a[i],
+                h: h[i],
+            })
+        }
+       
+        let maxCount = 0;
+        // absoluteErrorValues.sort((a, b) => a.absoluteErrorValue - b.absoluteErrorValue && b.a - a.a);
+        for (let i = 0; i < n; i++) {
+            if (absoluteErrorValues[i].h < H && absoluteErrorValues[i].a < A) {
+                maxCount += 1;
+                H =  absoluteErrorValues[i].h;
+                A =  absoluteErrorValues[i].a;
+            }
+        }
+        console.log(absoluteErrorValues)
+        return maxCount;
+    }
+    solution(n, H, A, h, a)
+</script>
+
+</html>

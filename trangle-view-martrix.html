@@ -19,11 +19,12 @@
         const gl = canvas.getContext('webgl');
         const vertexCode = `
         precision mediump float;
-        attribute vec3 position;
+        attribute vec4 position;
         attribute vec3 c_color;
+        uniform mat4 viewMatrix;
         varying vec4 vertexColor;
         void main(){
-           gl_Position = vec4(position,1.0);
+           gl_Position = vec4(position)*viewMatrix;
            vertexColor = vec4(c_color,1.0);
         }
         `;
@@ -34,23 +35,51 @@
           gl_FragColor = vertexColor;
         }
       `;
-      const mat4 = glMatrix.mat4;
+
       
+      const mat4 = glMatrix.mat4;
+      const vec4 = glMatrix.vec4;
+      const viewMatrix = mat4.create(); // 创建单位矩阵
+      mat4.lookAt(viewMatrix, [1, 0, 0], [0, 0,-.5], [0, 1, 0])
+
+
         const vertices = [
             0.0,
             0.0,
-            0.5,
+            0.0,
+            1,
+
             0.5,
             0.5,
             0.0,
+            1,
+
+            0.5,
+            0.0,
+            0.0,
+            1,
 
             0.0,
             0.0,
+            0.0,
+            1,
+
             0.5,
             0.5,
             0.0,
+            1,
+
+            0.0,
             0.5,
+            0.0,
+            1,
         ];
+        // const vertex = vec4.fromValues(...vertices);
+   
+        // const transformedVertex = vec4.create();
+        // vec4.transformMat4(transformedVertex, vertex, viewMatrix)
+
+        // console.log(transformedVertex,'xxxxx')
         const colors = [
                 .5, 1, 1,
                 0, .5, 0,
@@ -67,7 +96,7 @@
         const shaderProgram = getShaderProgram(gl, vertexShader, fragmentShader);
         gl.useProgram(shaderProgram);
 
-
+vertices
         // 把坐标传给着色器
         const position = gl.getAttribLocation(
             shaderProgram,
@@ -77,8 +106,10 @@
             shaderProgram,
             'c_color'
         );
+        const viewMatrixLocation = gl.getUniformLocation(shaderProgram, 'viewMatrix');
+        gl.uniformMatrix4fv(viewMatrixLocation, false, viewMatrix);
         createBuffer(gl, position, {
-            size: 2
+            size: 4
         })
         gl.bufferData(
             gl.ARRAY_BUFFER,
@@ -96,7 +127,7 @@
             new Float32Array(colors),
             gl.STATIC_DRAW
         );
-        gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 2);
+        gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 4);
     </script>
 </body>
 
