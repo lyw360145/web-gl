@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaflet 综合地图示例</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- 移除了 Leaflet.VectorGrid 引用 -->
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        
+        #map {
+            height: 100vh;
+            width: 100%;
+        }
+        
+        .leaflet-popup-content-wrapper {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="map"></div>
+
+    <script>
+        // --- API 密钥配置 ---
+        var tiandituKey = ''; // <--- 在这里替换你的天地图 KEY
+
+        // 1. 初始化地图
+        var map = L.map('map').setView([19.0, 109.5], 8); // 海南岛附近
+
+        // --- 底图图层 ---
+        var tiandituSatellite = L.tileLayer('https://t{s}.tianditu.gov.cn/img_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=img&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILECOL={x}&TILEROW={y}&TILEMATRIX={z}&tk=' + tiandituKey, {
+            subdomains: ['0', '1', '2', '3', '4', '5', '6', '7'],
+            attribution: '天地图卫星影像'
+        });
+
+        var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        });
+
+        // --- 叠加图层 ---
+
+        // 天地图影像注记
+        var tiandituSatelliteAnnotation = L.tileLayer('https://t{s}.tianditu.gov.cn/cia_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=cia&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILECOL={x}&TILEROW={y}&TILEMATRIX={z}&tk=' + tiandituKey, {
+            subdomains: ['0', '1', '2', '3', '4', '5', '6', '7'],
+            attribution: '天地图影像注记'
+        });
+
+        // OpenSeaMap 海图
+        var openSeaMap = L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', {
+            attribution: '© <a href="http://www.openseamap.org/">OpenSeaMap</a> contributors',
+            opacity: 0.7
+        });
+
+        // 已移除 Mapbox 矢量瓦片图层相关代码
+
+
+        // --- 图层控制器 ---
+        var baseLayers = {
+            "天地图卫星": tiandituSatellite,
+            "OpenStreetMap": osmLayer
+        };
+
+        var overlayLayers = {
+            "天地图注记": tiandituSatelliteAnnotation,
+            "OpenSeaMap 海图": openSeaMap
+        };
+
+        // 将默认图层添加到地图
+        tiandituSatellite.addTo(map);
+        tiandituSatelliteAnnotation.addTo(map);
+        openSeaMap.addTo(map);
+
+        // 确保天地图图层在最底层
+        map.on('layeradd', function(e) {
+            if (e.layer === tiandituSatellite || e.layer === osmLayer) {
+                e.layer.bringToBack();
+            }
+        });
+
+        // 添加地图加载完成后的处理
+        map.whenReady(function() {
+            // 确保天地图在最底层
+            if (tiandituSatellite) {
+                tiandituSatellite.bringToBack();
+            }
+            console.log('地图加载完成');
+        });
+
+        // 添加自定义样式
+        var styleElement = document.createElement('style');
+        styleElement.textContent = `
+        .contour-label {
+            font-size: 10px;
+            color: #005cb9;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+        .contour-label-land {
+            color: #006400;
+        }
+    `;
+        document.head.appendChild(styleElement);
+
+        // 加载等深线 GeoJSON 数据
+        fetch('src/gebco_0_b200_contours2.json')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok: ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // 创建等深线图层
+                var labeledFeatures = {}; // 记录已标注的海拔值
+                var contourLabels = L.layerGroup(); // 用于存放标注的图层组
+
+                var contourLayer = L.geoJSON(data, {
+                    style: function(feature) {
+                        // 根据海拔高度设置不同颜色和线宽
+                        var elevation = feature.properties.elevation;
+                        var color, weight, opacity;
+
+                        // 跳过海岸线(0米线)
+                        if (elevation === 0) {
+                            color = '#005cb9'; // 深蓝色
+                            weight = 0;
+                            opacity = 0;
+                        } else if (elevation < 0) {
+                            // 水下等深线
+                            color = '#005cb9'; // 深蓝色
+                            weight = 0.5;
+                            opacity = 0.7;
+
+                            // 主要等深线加粗
+                            if (elevation % 100 === 0) {
+                                weight = 0.8;
+                                opacity = 0.8;
+                            }
+                        } else {
+                            // 陆地等高线
+                            color = '#006400'; // 深绿色
+                            weight = 0.5;
+                            opacity = 0.7;
+
+                            // 主要等高线加粗
+                            if (elevation % 100 === 0) {
+                                weight = 0.8;
+                                opacity = 0.8;
+                            }
+                        }
+
+                        return {
+                            color: color,
+                            weight: weight,
+                            opacity: opacity
+                        };
+                    },
+                    onEachFeature: function(feature, layer) {
+                        // // 添加点击事件显示属性信息
+                        // layer.on('click', function(e) {
+                        //     var popupContent = '<div><strong>海拔高度:</strong> ' + feature.properties.elevation + ' m</div>';
+                        //     if (feature.properties.ID !== undefined) {
+                        //         popupContent += '<div><strong>ID:</strong> ' + feature.properties.ID + '</div>';
+                        //     }
+
+                        //     L.popup()
+                        //         .setLatLng(e.latlng)
+                        //         .setContent(popupContent)
+                        //         .openOn(map);
+                        // });
+
+                        // 为等深线添加标注
+                        var elevation = feature.properties.elevation;
+
+                        // 增加更多标注，包括更多深度值
+                        // 对于每条线都添加标注，但每个深度值只添加一定数量的标注
+                        var shouldLabel = false;
+
+                        // 根据深度值决定是否添加标注
+                        if (elevation === 0) {
+                            // 跳过0米线标注
+                            shouldLabel = false;
+                        } else if (elevation % 100 === 0) {
+                            // 整百米的线始终标注
+                            shouldLabel = true;
+                        } else if (elevation % 50 === 0) {
+                            // 整半百米的线标注，但限制数量
+                            shouldLabel = !labeledFeatures[elevation] || Object.keys(labeledFeatures).filter(k => k == elevation).length < 3;
+                        } else if ([-10, -20, -30, -40, -60, -70, -80, -90].includes(elevation)) {
+                            // 其他重要深度线标注，但限制数量
+                            shouldLabel = !labeledFeatures[elevation] || Object.keys(labeledFeatures).filter(k => k == elevation).length < 2;
+                        }
+
+                        if (shouldLabel) {
+                            var coords = feature.geometry.coordinates;
+                            if (coords && coords.length > 0) {
+                                // 选择线条的中间点作为标注位置
+                                var midIndex = Math.floor(coords.length / 2);
+                                var midPoint = coords[midIndex];
+
+                                if (midPoint && midPoint.length >= 2) {
+                                    // 根据海拔高度选择样式类
+                                    var labelClass = 'contour-label';
+                                    if (elevation === 0) {
+                                        labelClass += ' contour-label-0';
+                                    } else if (elevation > 0) {
+                                        labelClass += ' contour-label-land';
+                                    }
+
+                                    // 创建标注
+                                    var elevationText = elevation + ' m';
+                                    var label = L.marker([midPoint[1], midPoint[0]], {
+                                        icon: L.divIcon({
+                                            className: labelClass,
+                                            html: elevationText,
+                                            iconSize: [0, 0],
+                                            iconAnchor: [0, 0]
+                                        }),
+                                        interactive: false // 禁用交互，避免标签阻挡地图点击
+                                    });
+
+                                    // 将标注添加到标注图层组
+                                    contourLabels.addLayer(label);
+
+                                    // 记录该海拔值已经标注过
+                                    if (!labeledFeatures[elevation]) {
+                                        labeledFeatures[elevation] = 1;
+                                    } else {
+                                        labeledFeatures[elevation]++;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // 将等深线图层和标注图层添加到地图
+                contourLayer.addTo(map);
+                contourLabels.addTo(map);
+
+                // 将等深线图层添加到图层控制器
+                overlayLayers['等深线'] = contourLayer;
+                overlayLayers['深度标注'] = contourLabels;
+                layerControl.remove();
+                layerControl = L.control.layers(baseLayers, overlayLayers).addTo(map);
+
+                console.log('等深线数据加载成功');
+            })
+            .catch(error => {
+                console.error('加载等深线数据失败:', error);
+                alert('加载等深线数据失败: ' + error.message);
+            }); // 等深线数据加载结束
+
+        var layerControl = L.control.layers(baseLayers, overlayLayers).addTo(map);
+
+        // --- 其他控件 ---
+        L.control.scale({
+            imperial: false
+        }).addTo(map);
+
+        // 加载船只数据并显示在地图上
+        var shipsLayer = L.layerGroup().addTo(map);
+        overlayLayers['船只'] = shipsLayer;
+        layerControl.remove();
+        layerControl = L.control.layers(baseLayers, overlayLayers).addTo(map);
+
+        // 自定义船只图标
+        var ShipIcon = L.Icon.extend({
+            options: {
+                iconSize: [10, 16], // 默认大小
+                iconAnchor: [5, 8], // 图标中心点
+                popupAnchor: [0, -10] // 弹出窗口相对于图标的位置
+            }
+        });
+
+        // 创建船只图标的SVG
+        function createShipSVG(size, color, rotation) {
+            // 船只大小映射 - 使用对数比例使差异更明显
+            var iconSize = 16;
+
+            // 输出船只大小信息便于调试
+            console.log('船只长度: ' + size + ' 米, 图标大小: ' + iconSize);
+
+            // 计算实际尺寸
+            var width = iconSize * 2;
+            var height = iconSize * 3;
+
+            // 增加稍大的尺寸确保旋转后不缺角
+            var svgWidth = width * 1.5;
+            var svgHeight = height * 1.5;
+            var offsetX = (svgWidth - width) / 2;
+            var offsetY = (svgHeight - height) / 2;
+
+            // 创建 SVG 路径
+            var svgPath = `<svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="${svgHeight}" viewBox="0 0 ${svgWidth} ${svgHeight}">
+`;
+
+            // 图形的中心点
+            var centerX = svgWidth / 2;
+            var centerY = svgHeight / 2;
+
+            // 如果 cog 为 0，绘制圆形
+            if (rotation === 0) {
+                // 圆形半径，使用较小的尺寸以保持与三角形视觉上的平衡
+                var radius = Math.min(width, height) / 2;
+                svgPath += `  <circle cx="${centerX}" cy="${centerY}" r="${radius}" fill="${color}" stroke="#000" stroke-width="1"/>
+`;
+            } else {
+                // 非零航向，绘制三角形
+                // 三角形的点，距离中心偏移以确保旋转后不被裁剪
+                var x1 = centerX;
+                var y1 = centerY - height / 2;
+                var x2 = centerX + width / 2;
+                var y2 = centerY + height / 2;
+                var x3 = centerX - width / 2;
+                var y3 = centerY + height / 2;
+
+                svgPath += `  <polygon points="${x1},${y1} ${x2},${y2} ${x3},${y3}" fill="${color}" stroke="#000" stroke-width="1" transform="rotate(${rotation} ${centerX} ${centerY})"/>
+`;
+            }
+
+            svgPath += `</svg>`;
+
+            return 'data:image/svg+xml;base64,' + btoa(svgPath);
+        }
+
+        // 根据船只类型获取颜色
+        function getShipColor(vesselType) {
+            // 将vesselType转换为数字以确保比较正确
+            var typeNum = parseInt(vesselType) || 0;
+
+            // 根据船只类型分配颜色
+            // 参考AIS船只类型代码：https://help.marinetraffic.com/hc/en-us/articles/205579997-What-is-the-significance-of-the-AIS-Shiptype-number-
+            switch (true) {
+                case (typeNum >= 60 && typeNum <= 69): // 客船，游船
+                    return '#1e90ff'; // 道奇蓝
+
+                case (typeNum >= 70 && typeNum <= 79): // 货船
+                    return '#ff4500'; // 橙红色
+
+                case (typeNum >= 80 && typeNum <= 89): // 油轮
+                    return '#9400d3'; // 紫色
+
+                case (typeNum >= 30 && typeNum <= 39): // 渔船
+                    return '#32cd32'; // 青绿色
+
+                case (typeNum == 52 || typeNum == 53): // 拖船
+                    return '#ff8c00'; // 深橙色
+
+                case (typeNum >= 90 && typeNum <= 99): // 其他船只
+                    return '#ff1493'; // 深粉色
+
+                default: // 未知类型
+                    return '#ffffff'; // 白色
+            }
+        }
+
+        // 加载船只数据
+        fetch('./ships.csv')
+            .then(res => res.text())
+            .then(csvText => {
+                var results = Papa.parse(csvText, {
+                    header: true,
+                    dynamicTyping: true,
+                    skipEmptyLines: true
+                });
+                var ships = results.data;
+                console.log('加载到 ' + ships.length + ' 条船舶数据');
+                shipsLayer.clearLayers();
+
+                // 遍历每一船只数据
+                ships.forEach(ship => {
+                    // 检查必要的坐标数据
+                    if (ship.lon && ship.lat) {
+                        // 获取船只方向（使用cog，如果有的话）
+                        var rotation = 0;
+                        if (ship.cog !== null && ship.cog !== undefined && ship.cog !== '0.0') {
+                            rotation = ship.cog;
+                        }
+
+                        // 默认船只长度
+                        var length = 30; // 默认中型船
+
+                        // 根据数据源获取船只颜色
+                        var color = '#ff1493'; // 默认蓝色
+                        if (ship.source) {
+                            // 可以根据source字段设置不同颜色
+                            if (ship.source === 'b4g2g') {
+                                color = '#32cd32'; // 绿色
+                            } else if (ship.source === 'hai_lan') {
+                                color = '#ff4500';
+                            }
+                        }
+
+                        // 创建船只图标
+                        var shipIconUrl = createShipSVG(length, color, rotation);
+
+                        // 使用固定大小
+                        var displaySize = 24; // 中型船
+
+                        // 使用自定义大小创建图标
+                        var shipIcon = new ShipIcon({
+                            iconUrl: shipIconUrl,
+                            iconSize: [displaySize, displaySize],
+                            iconAnchor: [displaySize / 2, displaySize / 2],
+                            popupAnchor: [0, -displaySize / 2]
+                        });
+
+                        // 创建标记并添加到图层
+                        var marker = L.marker([ship.lat, ship.lon], {
+                            icon: shipIcon
+                        });
+
+                        // 添加弹出窗口信息
+                        var popupContent = `
+                        <div class="ship-popup">
+                            <h3>船只 ID: ${ship.id || '未知'}</h3>
+                            <table>
+                                <tr><td><strong>ID:</strong></td><td>${ship.id || 'N/A'}</td></tr>
+                                <tr><td><strong>时间:</strong></td><td>${ship.postime || 'N/A'}</td></tr>
+                                <tr><td><strong>经度:</strong></td><td>${ship.lon || 'N/A'}</td></tr>
+                                <tr><td><strong>纬度:</strong></td><td>${ship.lat || 'N/A'}</td></tr>
+                                <tr><td><strong>航向:</strong></td><td>${ship.cog !== null ? ship.cog + '°' : 'N/A'}</td></tr>
+                                <tr><td><strong>数据源:</strong></td><td>${ship.source || 'N/A'}</td></tr>
+                            </table>
+                        </div>
+                    `;
+                        marker.bindPopup(popupContent);
+
+                        // 添加到船只图层
+                        shipsLayer.addLayer(marker);
+                    }
+                });
+
+                console.log('已加载 ' + ships.length + ' 条船只数据');
+            })
+            .catch(error => {
+                console.error('加载船只数据失败:', error);
+            });
+
+        // 添加自定义信息框到地图控件
+        var customInfoControl = L.Control.extend({
+            onAdd: function(map) {
+                return document.getElementById('custom-info');
+            },
+            onRemove: function(map) {
+                // Nothing to do here
+            }
+        });
+        map.addControl(new customInfoControl({
+            position: 'topright'
+        }));
+
+        // 添加自定义信息框到DOM
+        var customInfoDiv = document.createElement('div');
+        customInfoDiv.id = 'custom-info';
+        customInfoDiv.className = 'leaflet-control leaflet-bar';
+        customInfoDiv.style.padding = '10px';
+        customInfoDiv.style.backgroundColor = 'white';
+        customInfoDiv.style.border = '2px solid rgba(0,0,0,0.2)';
+        customInfoDiv.style.borderRadius = '4px';
+        customInfoDiv.style.display = 'none';
+        customInfoDiv.innerHTML = `
+        <h4 style="margin-top:0">矢量瓦片加载问题</h4>
+        <p>矢量瓦片未能正确显示。可能的原因：</p>
+        <ul>
+            <li>Tileset ID 不正确</li>
+            <li>Mapbox Token 无效或过期</li>
+            <li>图层名称不匹配</li>
+            <li>样式定义有误</li>
+        </ul>
+        <p>请检查控制台获取更多信息。</p>
+    `;
+        document.body.appendChild(customInfoDiv);
+
+        // 定义变量
+        var displayCustomInfo = false;
+
+        // 如果一开始就有问题，立即显示提示信息
+        if (displayCustomInfo) {
+            document.getElementById('custom-info').style.display = 'block';
+        }
+    </script>
+
+</body>
+
+</html>

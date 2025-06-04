@@ -1,73 +1,145 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="zh">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>点绘制</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaflet Draw + 自定义工具</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
     <style>
-        /* #container-gl {
-            width: 800px;
-            height: 400px;
-        } */
+        #map { width: 100%; height: 600px; }
     </style>
-    <script src="
-    https://cdn.jsdelivr.net/npm/gl-matrix@3.4.3/gl-matrix-min.min.js
-    "></script>
-    <script src="./utils/programGl.js"></script>
 </head>
-
 <body>
-    <canvas id="container-gl"> </canvas>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+
     <script>
-        const canvas = document.getElementById('container-gl');
-        const gl = canvas.getContext('webgl');
-        const vertexCode = `
-        attribute vec3 position;
-        void main(){
-           gl_Position = vec4(position,1.0);
-           gl_PointSize = 10.0;
-            
-        }
-        `;
-        const fragmentCode = `
-        void main(){
-          gl_FragColor = vec4(1.0,0.0,0.0,1.0);
-        }
-      `;
+        // **初始化地图**
+        const map = L.map("map").setView([51.505, -0.09], 13);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
-        const vertices = [
-            0.0,
-            0.0,
-            0.0, // 点的坐标
-            0.1,
-            0.1,
-            0.0,
-        ];
-        const vertexBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-        gl.bufferData(
-            gl.ARRAY_BUFFER,
-            new Float32Array(vertices),
-            gl.STATIC_DRAW
-        );
-        // 创建着色器
-        const vertexShader = getShader(gl, vertexCode, gl.VERTEX_SHADER);
-        const fragmentShader = getShader(gl, fragmentCode, gl.FRAGMENT_SHADER);
-        // 创建着色器程序
-        const shaderProgram = getShaderProgram(gl, vertexShader, fragmentShader);
+        // **默认绘制工具**
+        const drawControl = new L.Control.Draw({
+            edit: false,
+            draw: {
+                polygon: true,
+                polyline: true,
+                rectangle: { showArea: false },
+                circle: { radius: 500 },
+                marker: true,
+                circlemarker: false
+            }
+        });
+        map.addControl(drawControl);
 
-        gl.useProgram(shaderProgram);
-        // 把坐标传给着色器
-        const positionAttributeLocation = gl.getAttribLocation(
-            shaderProgram,
-            'position'
-        );
-        gl.enableVertexAttribArray(positionAttributeLocation);
-        gl.vertexAttribPointer(positionAttributeLocation, 3, gl.FLOAT, false, 0, 0);
+        // **定义椭圆绘制工具**
+        L.Draw.Ellipse = L.Draw.Feature.extend({
+            initialize: function (map, options) {
+                this.type = "ellipse";
+                L.Draw.Feature.prototype.initialize.call(this, map, options);
+            },
 
-        gl.drawArrays(gl.POINTS, 0, vertices.length / 3);
+            addHooks: function () {
+                if (this._map) {
+                    this._map.on("click", this._onClick, this);
+                }
+            },
+
+            removeHooks: function () {
+                if (this._map) {
+                    this._map.off("click", this._onClick, this);
+                }
+            },
+
+            _onClick: function (e) {
+                const center = e.latlng;
+                const ellipse = L.circle(center, {
+                    color: "blue",
+                    fillColor: "#00f",
+                    fillOpacity: 0.3,
+                    radius: 500
+                }).addTo(this._map);
+
+                this._map.fire(L.Draw.Event.CREATED, { layer: ellipse, layerType: this.type });
+            }
+        });
+
+        // **定义箭头绘制工具**
+        L.Draw.Arrow = L.Draw.Feature.extend({
+            initialize: function (map, options) {
+                this.type = "arrow";
+                L.Draw.Feature.prototype.initialize.call(this, map, options);
+            },
+
+            addHooks: function () {
+                if (this._map) {
+                    this._map.on("click", this._onClick, this);
+                }
+            },
+
+            removeHooks: function () {
+                if (this._map) {
+                    this._map.off("click", this._onClick, this);
+                }
+            },
+
+            _onClick: function (e) {
+                const latlngs = [
+                    e.latlng,
+                    L.latLng(e.latlng.lat + 0.01, e.latlng.lng + 0.01)
+                ];
+                const arrow = L.polyline(latlngs, {
+                    color: "red",
+                    weight: 3,
+                    opacity: 0.9,
+                    dashArray: "5, 5"
+                }).addTo(this._map);
+
+                this._map.fire(L.Draw.Event.CREATED, { layer: arrow, layerType: this.type });
+            }
+        });
+
+        // **添加自定义工具按钮**
+        L.Control.CustomDraw = L.Control.extend({
+            onAdd: function (map) {
+                const container = L.DomUtil.create("div", "leaflet-bar leaflet-control leaflet-control-custom");
+
+                // 椭圆按钮
+                const ellipseButton = L.DomUtil.create("a", "leaflet-draw-draw-ellipse", container);
+                ellipseButton.innerHTML = "⬭";
+                ellipseButton.href = "#";
+                L.DomEvent.on(ellipseButton, "click", function () {
+                    new L.Draw.Ellipse(map).enable();
+                });
+
+                // 箭头按钮
+                const arrowButton = L.DomUtil.create("a", "leaflet-draw-draw-arrow", container);
+                arrowButton.innerHTML = "➤";
+                arrowButton.href = "#";
+                L.DomEvent.on(arrowButton, "click", function () {
+                    new L.Draw.Arrow(map).enable();
+                });
+
+                return container;
+            }
+        });
+
+        // **自定义工具栏添加到左上角**
+        map.addControl(new L.Control.CustomDraw({ position: "topleft" }));
+
+        // **监听绘制完成事件**
+        map.on(L.Draw.Event.CREATED, function (e) {
+            const type = e.layerType;
+            const layer = e.layer;
+            console.log("绘制完成：", type);
+            map.addLayer(layer);
+        });
+
     </script>
-</body>
 
+</body>
 </html>

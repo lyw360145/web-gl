@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div>
+        <input type="text">
+        <div id="content"></div>
+    </div>
+    <script>
+        const ref = (value) => {
+            return new Proxy(typeof value === 'object' ? value : {
+                value: value
+            }, {
+                get(target, key) {
+                    return target[key];
+                },
+                set(target, key, value) {
+                    console.log(111)
+                    target[key] = value;
+                    trigger();
+                    return true;
+                }
+            })
+        }
+        const text = ref({
+            test: 1,
+            obj: {
+                name: 'dfdf'
+            }
+        })
+        const input = document.querySelector('input');
+        // const content = document.querySelector('#content');
+        // const value = ref();
+        input.addEventListener('input', function() {
+            console.log(text, 'fdfd')
+            text.obj.name = this.value;
+        })
+        const trigger = () => {
+            const content = document.querySelector('#content');
+            console.log(text.test, 'text.value.test')
+            content.innerHTML = text.obj.name;
+        }
+    </script>
+</body>
+
+</html>

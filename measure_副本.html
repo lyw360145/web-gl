@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>距离时间计算 - 优化版</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+        #control-panel {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            min-width: 250px;
+            z-index: 2;
+        }
+        .input-group {
+            margin-bottom: 10px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .input-group input, .input-group button, select {
+            padding: 5px;
+            margin-right: 10px;
+        }
+        #result {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        /* 底部居中信息框 */
+        #info-box {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            z-index: 2;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="control-panel">
+        <!-- 控制按钮 -->
+        <div class="input-group">
+            <button id="set-start-btn">设置起点</button>
+            <button id="draw-route-btn" disabled>绘制航线</button>
+        </div>
+        <!-- 速度与单位输入 -->
+        <div class="input-group">
+            <label>速度：</label>
+            <input type="number" id="speed" min="0" step="0.1" placeholder="输入速度" disabled>
+            <select id="unit" disabled>
+                <option value="knots">节</option>
+                <option value="kmh">km/h</option>
+                <option value="ms">m/s</option>
+            </select>
+        </div>
+        <!-- 结果显示 -->
+        <div id="result">
+            <div>距离：<span id="distance">-</span></div>
+            <div>预计时间：<span id="time">-</span></div>
+        </div>
+    </div>
+    <!-- 底部信息框 -->
+    <div id="info-box">请点击“设置起点”按钮</div>
+
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1IjoiaWZvb2J0b29rIiwiYSI6ImNqdnczZ3plODF5dDE0YW5uNGhpNWcyanAifQ.qgmnnkw85aN0xuI2HVcgHw';
+
+        // 全局变量与状态标识
+        let startMarker = null;
+        let endMarker = null;
+        let routePoints = [];
+        let isSettingStart = false;
+        let isDrawingRoute = false;
+        let routeFinished = false;
+
+        // 初始化地图
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/ifoobtook/clyy8wept00aq01riavz6eq1l',
+            center: [108.9000, 19.7333],
+            zoom: 7
+        });
+
+        // 更新信息框内容
+        function updateInfo(message) {
+            document.getElementById('info-box').textContent = message;
+        }
+
+        // 速度单位转换为米/秒
+        function convertToMetersPerSecond(speed, unit) {
+            switch(unit) {
+                case 'knots': return speed * 0.514444;
+                case 'kmh': return speed * 0.277778;
+                case 'ms': return speed;
+                default: return speed;
+            }
+        }
+
+        // 格式化时间
+        function formatTime(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${hours}小时 ${minutes}分钟 ${secs}秒`;
+        }
+
+        // 计算航线总距离并更新显示
+        function calculateResult() {
+            if (routePoints.length < 2) return;
+            let totalDistance = 0;
+            for (let i = 0; i < routePoints.length - 1; i++) {
+                const from = turf.point(routePoints[i]);
+                const to = turf.point(routePoints[i+1]);
+                totalDistance += turf.distance(from, to, {units: 'kilometers'});
+            }
+            document.getElementById('distance').textContent = totalDistance.toFixed(2) + ' 公里';
+            const speedVal = parseFloat(document.getElementById('speed').value);
+            if (!speedVal || speedVal <= 0) {
+                document.getElementById('time').textContent = '速度必须大于0';
+                return;
+            }
+            const unit = document.getElementById('unit').value;
+            const speedInMS = convertToMetersPerSecond(speedVal, unit);
+            const timeInSeconds = (totalDistance * 1000) / speedInMS;
+            document.getElementById('time').textContent = formatTime(timeInSeconds);
+        }
+
+        // 更新地图航线显示
+        function updateRoute() {
+            if (map.getLayer('route')) {
+                map.removeLayer('route');
+            }
+            if (map.getSource('route')) {
+                map.removeSource('route');
+            }
+            if (routePoints.length < 2) return;
+            const route = {
+                type: 'Feature',
+                geometry: {
+                    type: 'LineString',
+                    coordinates: routePoints
+                }
+            };
+            map.addSource('route', {
+                type: 'geojson',
+                data: route
+            });
+            map.addLayer({
+                id: 'route',
+                type: 'line',
+                source: 'route',
+                layout: {
+                    'line-join': 'round',
+                    'line-cap': 'round'
+                },
+                paint: {
+                    'line-color': '#888',
+                    'line-width': 2
+                }
+            });
+        }
+
+        // 地图单击事件处理
+        map.on('click', (e) => {
+            const point = [e.lngLat.lng, e.lngLat.lat];
+            if (isSettingStart) {
+                // 设置起点
+                routePoints = [point];
+                if (startMarker) {
+                    startMarker.setLngLat(point);
+                } else {
+                    startMarker = new mapboxgl.Marker({ color: '#FF0000' })
+                        .setLngLat(point)
+                        .addTo(map);
+                }
+                isSettingStart = false;
+                // 启用绘制航线按钮
+                document.getElementById('draw-route-btn').disabled = false;
+                updateInfo("起点已设置。点击“绘制航线”按钮开始绘制航线。");
+            } else if (isDrawingRoute && !routeFinished) {
+                // 添加航线点
+                routePoints.push(point);
+                updateRoute();
+            }
+        });
+
+        // 地图双击事件：确认终点并结束航线绘制
+        map.on('dblclick', (e) => {
+            if (isDrawingRoute && !routeFinished) {
+                e.preventDefault();  // 阻止默认双击缩放
+                const finalPoint = [e.lngLat.lng, e.lngLat.lat];
+                routePoints.push(finalPoint);
+                updateRoute();
+                routeFinished = true;
+                isDrawingRoute = false;
+                // 添加或更新终点标记（蓝色）
+                if (endMarker) {
+                    endMarker.setLngLat(finalPoint);
+                } else {
+                    endMarker = new mapboxgl.Marker({ color: '#0000FF' })
+                        .setLngLat(finalPoint)
+                        .addTo(map);
+                }
+                // 启用速度输入框
+                document.getElementById('speed').disabled = false;
+                document.getElementById('unit').disabled = false;
+                updateInfo("航线已绘制完成。请输入航速以计算所需时间。");
+            }
+        });
+
+        // “设置起点”按钮点击事件：重置所有状态
+        document.getElementById('set-start-btn').addEventListener('click', () => {
+            isSettingStart = true;
+            isDrawingRoute = false;
+            routeFinished = false;
+            routePoints = [];
+            if (startMarker) { 
+                startMarker.remove();
+                startMarker = null;
+            }
+            if (endMarker) {
+                endMarker.remove();
+                endMarker = null;
+            }
+            if (map.getLayer('route')) {
+                map.removeLayer('route');
+            }
+            if (map.getSource('route')) {
+                map.removeSource('route');
+            }
+            // 禁用“绘制航线”及速度输入
+            document.getElementById('draw-route-btn').disabled = true;
+            document.getElementById('speed').disabled = true;
+            document.getElementById('unit').disabled = true;
+            // 清空结果显示
+            document.getElementById('distance').textContent = '-';
+            document.getElementById('time').textContent = '-';
+            updateInfo("点击地图设置起点。");
+        });
+
+        // “绘制航线”按钮点击事件：启用航线绘制模式
+        document.getElementById('draw-route-btn').addEventListener('click', () => {
+            if (!startMarker) {
+                updateInfo("请先设置起点。");
+                return;
+            }
+            isDrawingRoute = true;
+            routeFinished = false;
+            // 保留起点，重新开始绘制航线
+            routePoints = [startMarker.getLngLat().toArray()];
+            if (endMarker) {
+                endMarker.remove();
+                endMarker = null;
+            }
+            if (map.getLayer('route')) {
+                map.removeLayer('route');
+            }
+            if (map.getSource('route')) {
+                map.removeSource('route');
+            }
+            // 禁用速度输入，等待航线绘制完成
+            document.getElementById('speed').disabled = true;
+            document.getElementById('unit').disabled = true;
+            // 清空结果显示
+            document.getElementById('distance').textContent = '-';
+            document.getElementById('time').textContent = '-';
+            updateInfo("请在地图上点击添加航线点，双击确认终点。");
+        });
+
+        // 监听速度与单位变化，计算航行时间
+        document.getElementById('speed').addEventListener('input', calculateResult);
+        document.getElementById('unit').addEventListener('change', calculateResult);
+    </script>
+</body>
+</html>
