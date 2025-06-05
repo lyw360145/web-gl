@@ -59,13 +59,11 @@
 
         const input = document.querySelector('input');
         input.addEventListener('input', function() {
-            console.log(text, 'fdfd')
             text.value.test = this.value;
         })
 
         function trigger() {
             const content = document.querySelector('#content');
-            console.log(text.test, 'text.value.test')
             content.innerHTML = text.value.test;
         }
     </script>
