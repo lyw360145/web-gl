@@ -13,38 +13,60 @@
         <div id="content"></div>
     </div>
     <script>
-        const ref = (value) => {
-            return new Proxy(typeof value === 'object' ? value : {
-                value: value
-            }, {
+        const targetWeak = new WeakMap()
+        const reactive = (value) => {
+            const proxy = new Proxy(value, {
                 get(target, key) {
+                    if (typeof target[key] === 'object') {
+                        if (targetWeak.get(target[key])) {
+                            return targetWeak.get(target[key])
+                        }
+                        return reactive(target[key])
+                    }
                     return target[key];
                 },
                 set(target, key, value) {
-                    console.log(111)
                     target[key] = value;
                     trigger();
                     return true;
                 }
             })
+            targetWeak.set(value, proxy)
+            return proxy
+        }
+        class RefImpl {
+            constructor(value) {
+                if (typeof value === 'object') {
+                    this._value = reactive(value);
+                } else {
+                    this._value = value
+                }
+            }
+            get value() {
+                return this._value
+            }
+            set value(newValue) {
+                trigger();
+                this._value = newValue
+            }
+        }
+        const ref = (value) => {
+            return new RefImpl(value)
         }
         const text = ref({
-            test: 1,
-            obj: {
-                name: 'dfdf'
-            }
-        })
+            test: 1
+        });
+
         const input = document.querySelector('input');
-        // const content = document.querySelector('#content');
-        // const value = ref();
         input.addEventListener('input', function() {
             console.log(text, 'fdfd')
-            text.obj.name = this.value;
+            text.value.test = this.value;
         })
-        const trigger = () => {
+
+        function trigger() {
             const content = document.querySelector('#content');
             console.log(text.test, 'text.value.test')
-            content.innerHTML = text.obj.name;
+            content.innerHTML = text.value.test;
         }
     </script>
 </body>
