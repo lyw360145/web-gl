@@ -1,63 +1,24 @@
 <!DOCTYPE html>
-<html lang="zh">
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>HTML5 相机扫码</title>
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-        }
-        
-        #qr-reader {
-            width: 300px;
-            margin: auto;
-        }
-        
-        #qr-result {
-            margin-top: 20px;
-            text-align: center;
-            font-size: 18px;
-            color: green;
-        }
-    </style>
+    <meta charset="utf-8" />
+    <title>TranslateTool</title>
 </head>
 
 <body>
-    <h2>📷 HTML5 相机扫码演示</h2>
-    <div id="qr-reader"></div>
-    <div id="qr-result">扫码结果将显示在这里</div>
-
+    <div>辅导费短发短发</div>
+    <!--谷歌翻译-->
+    <div id="google_translate_element"></div>
     <script>
-        function onScanSuccess(decodedText, decodedResult) {
-            document.getElementById("qr-result").innerText = "扫码结果: " + decodedText;
-            // 如果只想识别一次二维码，可以停止扫码
-            html5QrCode.stop().then(() => {
-                console.log("扫码停止");
-            });
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                layout: google.translate.TranslateElement.InlineLayout.HORIZONTAL
+            }, 'google_translate_element');
         }
-
-        const html5QrCode = new Html5Qrcode("qr-reader");
-
-        Html5Qrcode.getCameras().then(devices => {
-            if (devices && devices.length) {
-                const cameraId = devices[0].id;
-                html5QrCode.start(
-                    cameraId, {
-                        fps: 10,
-                        qrbox: 250
-                    },
-                    onScanSuccess
-                );
-            }
-        }).catch(err => {
-            console.error("摄像头获取失败", err);
-            alert("无法访问摄像头，请检查权限或使用 HTTPS");
-        });
     </script>
+    <script src="http://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 
 </html>

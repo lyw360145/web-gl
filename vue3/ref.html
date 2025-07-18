@@ -67,6 +67,16 @@
             content.innerHTML = text.value.test;
         }
     </script>
+    <script>
+        const obj = {
+            a: 1,
+            b: 2
+        }
+
+        with(obj) {
+            console.log(a + b) // 🚫 SyntaxError: Strict mode code may not include a with statement
+        }
+    </script>
 </body>
 
 </html>

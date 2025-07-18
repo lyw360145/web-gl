@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,minimal-ui">
+    <meta name="referrer" content="no-referrer">
+    <title>xgplayer</title>
+    <style type="text/css">
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: auto;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="mse"></div>
+    <link rel="stylesheet" href="https://unpkg.byted-static.com/xgplayer/3.0.10/dist/index.min.css" />
+    <script charset="utf-8" src="https://unpkg.byted-static.com/xgplayer/3.0.10/dist/index.min.js"></script>
+
+    <script charset="utf-8" src="https://unpkg.byted-static.com/xgplayer-flv/3.0.10/dist/index.min.js"></script>
+    <script>
+        const config = {
+            "id": "mse",
+            "url": "http://113.59.48.188:28080/flv/yzrov/rov45.flv",
+            "playsinline": true,
+
+            "plugins": [],
+            "isLive": true,
+            flv: {
+                retryCount: 3, // 重试 3 次，默认值
+                retryDelay: 1000, // 每次重试间隔 1 秒，默认值
+                loadTimeout: 10000, // 请求超时时间为 10 秒，默认值
+                maxReaderInterval: 5000,
+                fetchOptions: {
+                    // 该参数会透传给 fetch，默认值为 undefined
+                    mode: 'cors'
+                }
+            }
+        }
+        console.log(FlvPlayer)
+        config.plugins.push(FlvPlayer)
+        let player = new Player(config)
+            // player.on("pause", function() {
+            //     console.log('fdfdfd')
+            // })
+        player.on("waiting", function() {
+
+            if (player.video.readyState === 2) {
+                player.load();
+                player.play()
+            }
+            // player.src = 'http://113.59.48.188:28080/flv/yzrov/rov45.flv'; // 更新源
+            //  // 重新加载
+            //; // 播放视频
+        })
+        player.on("error", function() {
+            player.src = 'http://113.59.48.188:28080/flv/yzrov/rov45.flv';
+
+            player.load();
+            player.play()
+        })
+    </script>
+</body>
+
+</html>

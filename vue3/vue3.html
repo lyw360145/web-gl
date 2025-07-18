@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>商品列表</title>
+    <script src="https://unpkg.com/vue@3"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f8f8f8;
+        }
+        
+        .product-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        
+        .product-card {
+            width: 200px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 12px;
+            background: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .product-image {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+        
+        .product-info {
+            margin-top: 8px;
+        }
+        
+        .price {
+            color: #e91e63;
+            font-weight: bold;
+            margin: 4px 0;
+        }
+        
+        .desc {
+            font-size: 0.85rem;
+            color: #555;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <div class="product-list">
+            <div class="product-card" v-for="product in products" :key="product.id">
+                <img :src="product.image" alt="商品图" class="product-image" />
+                <div class="product-info">
+                    <h2>{{ product.name }}</h2>
+                    <p class="price">￥{{ product.price }}</p>
+                    <p class="desc">{{ product.description }}</p>
+                </div>
+            </div>
+        </div>
+        <button @click="handleClick">店家</button>
+    </div>
+
+    <script>
+        const {
+            createApp,
+            ref,
+            watchEffect,
+            onMounted
+        } = Vue
+
+        createApp({
+            setup() {
+                const value = ref(0)
+                const value1 = ref(0)
+                watchEffect(() => {
+                    console.log(value.value, value1.value, 'watchEffect')
+                })
+                onMounted(() => {
+                    console.log(value.value, value1.value, 'onMounted')
+                })
+                const handleClick = () => {
+                    value.value++;
+                    value1.value++;
+                }
+
+                const products = ref([{
+                    id: 1,
+                    name: '无线鼠标',
+                    price: 99,
+                    description: '便携静音设计，适用于办公与游戏。',
+                    image: 'https://via.placeholder.com/100x100?text=鼠标',
+                }, {
+                    id: 2,
+                    name: '机械键盘',
+                    price: 299,
+                    description: '青轴手感，RGB 灯效，打字体验极佳。',
+                    image: 'https://via.placeholder.com/100x100?text=键盘',
+                }, {
+                    id: 3,
+                    name: '蓝牙耳机',
+                    price: 199,
+                    description: '主动降噪，支持长续航。',
+                    image: 'https://via.placeholder.com/100x100?text=耳机',
+                }, ])
+                return {
+                    handleClick,
+                    products
+                }
+            },
+        }).mount('#app')
+    </script>
+</body>
+
+</html>

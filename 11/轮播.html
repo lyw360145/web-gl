@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Swiper 闭环轮播</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.css" />
+    <style>
+        body {
+            margin: 0;
+            background: black;
+            color: white;
+            font-family: sans-serif;
+        }
+        
+        .carousel-container {
+            width: 1200px;
+            margin: 0 auto;
+            padding: 40px 0;
+            position: relative;
+        }
+        
+        .swiper {
+            padding: 0 40px;
+        }
+        
+        .swiper-slide {
+            background: #1a1a1a;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: row;
+            height: 160px;
+        }
+        
+        .slide-img {
+            width: 200px;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .slide-content {
+            padding: 16px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        .slide-content h4 {
+            margin: 0 0 10px;
+            font-size: 16px;
+        }
+        
+        .slide-content p {
+            margin: 4px 0;
+            font-size: 13px;
+            color: #ccc;
+        }
+        
+        .slide-content a {
+            color: #00ffff;
+            font-size: 14px;
+            text-decoration: none;
+        }
+        
+        .swiper-button-prev,
+        .swiper-button-next {
+            background: #333;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .swiper-footer {
+            text-align: right;
+            font-size: 14px;
+            padding: 10px 40px;
+        }
+        
+        .swiper-footer a {
+            color: white;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="carousel-container">
+        <h2 style="text-align:center;">热门数据</h2>
+        <div class="swiper">
+            <div class="swiper-wrapper">
+                <!-- 至少 5 slides -->
+                <div class="swiper-slide">
+                    <img class="slide-img" src="https://via.placeholder.com/200x150/222/fff?text=图1" />
+                    <div class="slide-content">
+                        <h4>936年气温栅格数据（海南）</h4>
+                        <p>范围：全球</p>
+                        <p>领域：海洋物理</p>
+                        <p>时间：1958-01-01 至 2022-12-31</p>
+                        <a href="#">查看详情 →</a>
+                    </div>
+                </div>
+
+                <div class="swiper-slide">
+                    <img class="slide-img" src="https://via.placeholder.com/200x150/333/fff?text=图2" />
+                    <div class="slide-content">
+                        <h4>全球海表温度数据</h4>
+                        <p>时间：1980-01-01 至 2022-12-31</p>
+                        <a href="#">查看详情 →</a>
+                    </div>
+                </div>
+
+                <div class="swiper-slide">
+                    <img class="slide-img" src="https://via.placeholder.com/200x150/444/fff?text=图3" />
+                    <div class="slide-content">
+                        <h4>南海风场数据</h4>
+                        <p>时间：2000-2020</p>
+                        <a href="#">查看详情 →</a>
+                    </div>
+                </div>
+
+                <div class="swiper-slide">
+                    <img class="slide-img" src="https://via.placeholder.com/200x150/555/fff?text=图4" />
+                    <div class="slide-content">
+                        <h4>气压变化数据</h4>
+                        <p>区域：中国</p>
+                        <a href="#">查看详情 →</a>
+                    </div>
+                </div>
+
+                <div class="swiper-slide">
+                    <img class="slide-img" src="https://via.placeholder.com/200x150/666/fff?text=图5" />
+                    <div class="slide-content">
+                        <h4>海洋盐度变化</h4>
+                        <p>时间：1990-2020</p>
+                        <a href="#">查看详情 →</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 左右箭头 -->
+            <div class="swiper-button-prev"></div>
+            <div class="swiper-button-next"></div>
+        </div>
+
+        <div class="swiper-footer">
+            <a href="#">查看更多 →</a>
+        </div>
+    </div>
+
+    <!-- Swiper JS -->
+    <script src="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js"></script>
+    <script>
+        const swiper = new Swiper('.swiper', {
+            loop: true,
+            loopAdditionalSlides: 2, // ✅ 提高容错
+            slidesPerView: 2.5,
+            spaceBetween: 20,
+            navigation: {
+                nextEl: '.swiper-button-next',
+                prevEl: '.swiper-button-prev',
+            },
+            autoplay: false, // 可开启
+        });
+    </script>
+
+</body>
+
+</html>
