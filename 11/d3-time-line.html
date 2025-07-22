@@ -2,35 +2,51 @@
 <html lang="zh">
 
 <head>
-    <meta charset="UTF-8">
-    <title>D3 时间轴缩放（中文）</title>
+    <meta charset="UTF-8" />
+    <title>D3 时间轴缩放（带点击三角指针和悬浮时间提示）</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         svg {
             border: 1px solid #ccc;
             cursor: grab;
         }
+        /* tooltip样式 */
+        
+        .tooltip {
+            position: absolute;
+            padding: 4px 8px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+            visibility: hidden;
+            white-space: nowrap;
+            user-select: none;
+            z-index: 10;
+        }
     </style>
 </head>
 
 <body>
     <div id="chart"></div>
+    <div id="tooltip" class="tooltip"></div>
 
     <script>
-        const width = 640;
-        const height = 400;
+        const width = 1280;
+        const height = 60;
         const marginTop = 20;
         const marginRight = 40;
         const marginBottom = 30;
         const marginLeft = 40;
-
+        const pointerCoor = {
+            xPos: 0,
+            yPos: 0,
+            date: ''
+        }
         const x = d3.scaleUtc()
-            .domain([new Date("2022-01-01 00:00:00"), new Date("2022-01-03 00:00:00")])
+            .domain([new Date("2022-01-01 00:00:00"), new Date("2024-01-01 00:00:00")])
             .range([marginLeft, width - marginRight]);
-
-        const y = d3.scaleLinear()
-            .domain([0, 100])
-            .range([height - marginBottom, marginTop]);
 
         const zhCN = d3.timeFormatLocale({
             dateTime: "%Y年%m月%d日 %A %X",
@@ -43,14 +59,6 @@
             shortMonths: ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"]
         });
 
-        const formatYear = zhCN.format("%Y");
-        const formatMonth = zhCN.format("%m");
-        const formatDay = zhCN.format("%d日");
-        const formatHour = zhCN.format("%H:%M");
-        const formatMinute = zhCN.format("%H:%M");
-        const formatSecond = zhCN.format("%M:%S");
-
-        // 自适应 tick 格式函数
         function getTickFormat(start, end) {
             return function(d, i, nodes) {
                 const yearTime = 365 * 24 * 60 * 60 * 1000;
@@ -62,56 +70,53 @@
                 const hour = date.getHours().toString().padStart(2, '0');
                 const minute = date.getMinutes().toString().padStart(2, '0');
                 const second = date.getSeconds().toString().padStart(2, '0');
-                console.log(nodes[1].__data__ - nodes[0].__data__, 'dfdfd', nodes[1].__data__, nodes[0].__data__, 'fff', d)
                 const diff = nodes[1].__data__ - nodes[0].__data__;
                 if (d3.timeYear.count(nodes[0].__data__, nodes[1].__data__) >= 1 && diff >= yearTime) {
                     return `${year}`;
                 }
                 if (d3.timeMonth.count(nodes[0].__data__, nodes[1].__data__) >= 1 && diff >= (dayTime * 28)) {
                     if (nodes[i + 1] && year !== nodes[i + 1].__data__.getFullYear()) {
-                        return `${year}-${month}`; // 年份变化时再显示完整
+                        return `${year}-${month}`;
                     }
                     return `${month}`;
                 } else if (d3.timeDay.count(nodes[0].__data__, nodes[1].__data__) >= 1 && diff >= dayTime) {
-                    console.log('day', day, d3.timeDay.count(nodes[0].__data__, nodes[1].__data__))
                     if (day === 1) {
                         return `${month}-${day}`;
                     }
                     return `${day}`;
                 } else if (diff < dayTime && diff >= 60 * 60 * 1000) {
-                    console.log('hour', hour, dayTime)
                     return `${hour}:${minute}`;
                 } else {
                     return `${minute}:${second}`;
                 }
-
-            }
-
-
+            };
         }
 
         const xAxis = d3.axisBottom(x)
             .tickFormat(getTickFormat(...x.domain()));
-
-        const yAxis = d3.axisRight(y);
 
         const svg = d3.select("#chart")
             .append("svg")
             .attr("width", width)
             .attr("height", height);
 
+        const rangeBlock = svg.append("rect")
+            .attr("y", height - marginBottom - 5)
+            .attr("height", 10)
+            .attr("fill", "#e0e0e0");
+
+        const [initStart, initEnd] = x.domain();
+        rangeBlock
+            .attr("x", x(initStart))
+            .attr("width", x(initEnd) - x(initStart));
+
         const xAxisG = svg.append("g")
             .attr("class", "x-axis")
             .attr("transform", `translate(0,${height - marginBottom})`)
             .call(xAxis);
 
-        svg.append("g")
-            .attr("class", "y-axis")
-            .attr("transform", `translate(${width - marginRight},0)`)
-            .call(yAxis);
-
         const zoom = d3.zoom()
-            .scaleExtent([0.001, 10000])
+            .scaleExtent([0.001, 1000])
             .translateExtent([
                 [marginLeft, 0],
                 [width - marginRight, height]
@@ -120,25 +125,120 @@
                 [marginLeft, 0],
                 [width - marginRight, height]
             ])
-            .filter((event) => {
-                if (event.type === "wheel") {
-                    const y = event.offsetY;
-                    const axisTop = height - marginBottom - 20;
-                    const axisBottom = height;
-                    return y >= axisTop && y <= axisBottom;
-                }
-                return true;
-            })
+            .filter(() => true)
             .on("zoom", zoomed);
 
         svg.call(zoom);
 
+        const tooltipGroup = svg.append("g")
+            .attr("class", "svg-tooltip")
+            .attr("visibility", "hidden");
+
+        const tooltipBg = tooltipGroup.append("rect")
+            .attr("fill", "black")
+            .attr("rx", 4) // 圆角
+            .attr("ry", 4)
+            .attr("opacity", 0.7);
+
+        const tooltipText = tooltipGroup.append("text")
+            .attr("fill", "white")
+            .attr("font-size", 12)
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("dy", "1em"); // 垂直偏移让文字更居中
+
         function zoomed(event) {
             const t = event.transform;
             const newX = t.rescaleX(x);
+
             const [start, end] = newX.domain();
             xAxis.tickFormat(getTickFormat(start, end));
             xAxisG.call(xAxis.scale(newX));
+
+            const displayStart = initStart < start ? start : initStart;
+            const displayEnd = initEnd > end ? end : initEnd;
+
+            if (displayStart < displayEnd) {
+                rangeBlock
+                    .attr("x", newX(displayStart))
+                    .attr("width", newX(displayEnd) - newX(displayStart) + 1)
+                    .attr("display", null);
+            } else {
+                rangeBlock.attr("display", "none");
+            }
+
+            // 缩放时更新指针图标位置
+            const pointerIcon = svg.select(".pointer-icon");
+            if (!pointerIcon.empty()) {
+                const pointerDate = pointerIcon.datum();
+                const triangleSize = 15;
+                pointerCoor.xPos = newX(pointerDate) - triangleSize / 2;
+                pointerCoor.yPos = marginTop - triangleSize + 10;
+                pointerIcon.attr("transform", `translate(${pointerCoor.xPos},${pointerCoor.yPos})`);
+                updatePointerCoor()
+            }
+        }
+
+        // 点击显示三角形指针图标
+        svg.on("click", (event) => {
+
+            const [mouseX] = d3.pointer(event);
+            const t = d3.zoomTransform(svg.node());
+            const currentXScale = t.rescaleX(x);
+            const clickedTime = currentXScale.invert(mouseX);
+
+            pointerCoor.date = clickedTime;
+            // 删除旧指针
+            svg.selectAll(".pointer-icon").remove();
+
+            const triangleSize = 15;
+            const pathData = `M0,0 L${triangleSize},0 L${triangleSize / 2},${triangleSize} Z`;
+
+            svg.append("path")
+                .datum(clickedTime)
+                .attr("class", "pointer-icon")
+                .attr("d", pathData)
+                .attr("fill", "red")
+                .attr("transform", () => {
+                    pointerCoor.xPos = currentXScale(clickedTime) - triangleSize / 2;
+                    pointerCoor.yPos = marginTop - triangleSize + 10;
+                    return `translate(${pointerCoor.xPos},${pointerCoor.yPos})`;
+                })
+                .attr("pointer-events", "all") // 允许接收鼠标事件
+
+
+        });
+        svg.on('mousemove', () => {
+            updatePointerCoor();
+
+        })
+        svg.on('mouseleave', () => {
+            tooltipGroup
+                .attr("transform", `translate(${pointerCoor.xPos -56},${pointerCoor.yPos+24})`)
+                .attr("visibility", "hidden");
+        })
+
+        function updatePointerCoor() {
+            if (!pointerCoor.date) {
+                return
+            }
+            const formatTime = d3.timeFormat("%Y-%m-%d %H:%M:%S")(pointerCoor.date);
+            // 设置文本内容
+            tooltipText.text(formatTime);
+
+            // 获取文本宽高来更新背景 rect 尺寸
+            const bbox = tooltipText.node().getBBox();
+            console.log(bbox, 'bbox')
+            tooltipBg
+                .attr("x", bbox.x - 5)
+                .attr("y", bbox.y - 2)
+                .attr("width", 138)
+                .attr("height", 22);
+
+            // 移动整个 tooltipGroup
+            tooltipGroup
+                .attr("transform", `translate(${pointerCoor.xPos -56},${pointerCoor.yPos+24})`)
+                .attr("visibility", "visible");
         }
     </script>
 </body>
