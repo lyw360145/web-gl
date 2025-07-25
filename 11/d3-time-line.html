@@ -8,7 +8,7 @@
     <style>
         svg {
             border: 1px solid #ccc;
-            cursor: grab;
+            cursor: pointer;
         }
         /* tooltip样式 */
         
@@ -39,6 +39,7 @@
         const marginRight = 40;
         const marginBottom = 30;
         const marginLeft = 40;
+        let isSelPointer = false;
         const pointerCoor = {
             xPos: 0,
             yPos: 0,
@@ -47,17 +48,6 @@
         const x = d3.scaleUtc()
             .domain([new Date("2022-01-01 00:00:00"), new Date("2024-01-01 00:00:00")])
             .range([marginLeft, width - marginRight]);
-
-        const zhCN = d3.timeFormatLocale({
-            dateTime: "%Y年%m月%d日 %A %X",
-            date: "%Y-%m-%d",
-            time: "%H:%M:%S",
-            periods: ["上午", "下午"],
-            days: ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"],
-            shortDays: ["日", "一", "二", "三", "四", "五", "六"],
-            months: ["一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"],
-            shortMonths: ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"]
-        });
 
         function getTickFormat(start, end) {
             return function(d, i, nodes) {
@@ -125,8 +115,14 @@
                 [marginLeft, 0],
                 [width - marginRight, height]
             ])
-            .filter(() => true)
-            .on("zoom", zoomed);
+            .filter((event) => {
+                return event.type === "wheel" || event.type === "mousemove" && event.buttons === 0 || event.type === "mousedown" && event.buttons === 1 || event.type === "mouseup" && event.buttons === 0;
+            })
+            .on("zoom", zoomed)
+            // .on("zoomend", () => {
+            //     console.log('dsdf')
+            //         // isSelPointer = false;
+            // });
 
         svg.call(zoom);
 
@@ -148,6 +144,13 @@
             .attr("dy", "1em"); // 垂直偏移让文字更居中
 
         function zoomed(event) {
+
+            if (isSelPointer) {
+                drawTriangle(event, 'drag');
+                updatePointerCoor();
+                // isSelPointer = false;
+                return
+            }
             const t = event.transform;
             const newX = t.rescaleX(x);
 
@@ -168,6 +171,7 @@
             }
 
             // 缩放时更新指针图标位置
+
             const pointerIcon = svg.select(".pointer-icon");
             if (!pointerIcon.empty()) {
                 const pointerDate = pointerIcon.datum();
@@ -181,7 +185,26 @@
 
         // 点击显示三角形指针图标
         svg.on("click", (event) => {
+            console.log('dfdfd')
+            drawTriangle(event);
+            updatePointerCoor();
 
+
+        });
+
+        svg.on('mousemove', () => {
+
+            updatePointerCoor();
+
+        })
+        svg.on('mouseleave', () => {
+            tooltipGroup
+                .attr("transform", `translate(${pointerCoor.xPos -56},${pointerCoor.yPos+24})`)
+                .attr("visibility", "hidden");
+        })
+
+
+        function drawTriangle(event, type) {
             const [mouseX] = d3.pointer(event);
             const t = d3.zoomTransform(svg.node());
             const currentXScale = t.rescaleX(x);
@@ -193,7 +216,6 @@
 
             const triangleSize = 15;
             const pathData = `M0,0 L${triangleSize},0 L${triangleSize / 2},${triangleSize} Z`;
-
             svg.append("path")
                 .datum(clickedTime)
                 .attr("class", "pointer-icon")
@@ -202,21 +224,11 @@
                 .attr("transform", () => {
                     pointerCoor.xPos = currentXScale(clickedTime) - triangleSize / 2;
                     pointerCoor.yPos = marginTop - triangleSize + 10;
-                    return `translate(${pointerCoor.xPos},${pointerCoor.yPos})`;
+                    return `translate(${type ? pointerCoor.xPos - 10.5 : pointerCoor.xPos},${pointerCoor.yPos})`;
+                }).attr("pointer-events", "all").on("mousedown", (event, d) => {
+                    isSelPointer = true;
                 })
-                .attr("pointer-events", "all") // 允许接收鼠标事件
-
-
-        });
-        svg.on('mousemove', () => {
-            updatePointerCoor();
-
-        })
-        svg.on('mouseleave', () => {
-            tooltipGroup
-                .attr("transform", `translate(${pointerCoor.xPos -56},${pointerCoor.yPos+24})`)
-                .attr("visibility", "hidden");
-        })
+        }
 
         function updatePointerCoor() {
             if (!pointerCoor.date) {
@@ -228,7 +240,7 @@
 
             // 获取文本宽高来更新背景 rect 尺寸
             const bbox = tooltipText.node().getBBox();
-            console.log(bbox, 'bbox')
+            // console.log(bbox, 'bbox')
             tooltipBg
                 .attr("x", bbox.x - 5)
                 .attr("y", bbox.y - 2)
@@ -240,6 +252,9 @@
                 .attr("transform", `translate(${pointerCoor.xPos -56},${pointerCoor.yPos+24})`)
                 .attr("visibility", "visible");
         }
+        window.addEventListener("mouseup", () => {
+            isSelPointer = false;
+        }, true);
     </script>
 </body>
 
