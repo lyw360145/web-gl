@@ -124,7 +124,7 @@
             //         // isSelPointer = false;
             // });
 
-        svg.call(zoom);
+        d3.select('#chart').call(zoom);
 
         const tooltipGroup = svg.append("g")
             .attr("class", "svg-tooltip")
@@ -145,8 +145,9 @@
 
         function zoomed(event) {
 
+
             if (isSelPointer) {
-                drawTriangle(event, 'drag');
+                drawTriangle(event.sourceEvent, 'drag');
                 updatePointerCoor();
                 // isSelPointer = false;
                 return
@@ -185,7 +186,7 @@
 
         // 点击显示三角形指针图标
         svg.on("click", (event) => {
-            console.log('dfdfd')
+            console.log('dfdfd', event)
             drawTriangle(event);
             updatePointerCoor();
 
